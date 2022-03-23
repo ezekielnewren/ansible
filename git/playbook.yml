@@ -1,29 +1,37 @@
 ---
 - hosts: all
   become: true
+  pre_tasks:
+    - name: minimum ansible version
+      vars:
+        minver: "2.9.27"
+      assert:
+        that: "ansible_version.full is version_compare('{{ minver }}', '>=')"
+        msg: "You must update Ansible to at least {{ minver }} to use this version of Drupal VM."
   tasks:
-  - name: required variables
-    debug:
-      msg:
-        - "nonrootuser: {{ nonrootuser }}"
-        #- "ansible_distribution_release: {{ ansible_distribution_release }}"
-    tags: general
+    - name: required variables
+      debug:
+        msg:
+          - "nonrootuser: {{ nonrootuser }}"
+          - "ansible_distribution_release: {{ ansible_distribution_release }}"
+      tags: general
 
-  - name: add git ppa
-    apt_repository:
-      repo: ppa:git-core/ppa
-      update_cache: yes
+    - name: add git ppa
+      apt_repository:
+        repo: ppa:git-core/ppa
+        update_cache: yes
 
-  - name: install git
-    apt:
-      name: git
-      state: latest
+    - name: install git
+      apt:
+        name: git
+        state: latest
 
-  - name: git config
-    become_user: "{{ nonrootuser }}"
-    command: "{{ item }}"
-    with_items:
-      - git config --global user.email "ezekielnewren@gmail.com"
-      - git config --global user.name "Ezekiel Newren"
-      - git config --global pull.rebase false
-      - git config --global init.defaultBranch main
+    - name: git config
+      become_user: "{{ nonrootuser }}"
+      command: "{{ item }}"
+      with_items:
+        - git config --global user.email "ezekielnewren@gmail.com"
+        - git config --global user.name "Ezekiel Newren"
+        - git config --global pull.rebase false
+        - git config --global init.defaultBranch main
+
