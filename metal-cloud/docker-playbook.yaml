@@ -1,0 +1,72 @@
+---
+- hosts: all
+  become: true
+  pre_tasks:
+    - name: minimum ansible version
+      vars:
+        minver: "2.9.27"
+      assert:
+        that: "ansible_version.full is version_compare('{{ minver }}', '>=')"
+        msg: "You must update Ansible to at least {{ minver }} to use this version of Drupal VM."
+    - name: required variables
+      debug:
+        msg:
+          - "nonrootuser: {{ nonrootuser }}"
+          - "ansible_distribution_release: {{ ansible_distribution_release }}"
+          - "ansible_architecture: {{ ansible_architecture }}"
+  tasks:
+    - name: install dependencies
+      apt:
+        pkg:
+          - ca-certificates
+          - curl
+          - gnupg
+          - gnupg2
+
+    - name: add docker key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+        state: present
+    
+    - name: add docker repo
+      apt_repository:
+        repo: "deb [arch={{ ansible_architecture }} signed-by=9DC858229FC7DD38854AE2D88D81803C0EBFCD88] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        update_cache: yes
+        state: present
+    
+    - name: install docker
+      apt:
+        pkg:
+          - docker.io
+        state: latest
+        update_cache: yes
+
+    - name: determine availble groups
+      getent:
+        database: group
+    
+    - name: determine available users
+      getent:
+        database: passwd
+    
+    - name: ensure that docker group exists
+      group:
+        name: docker
+      when: "'docker' not in ansible_facts.getent_group"
+
+    - name: add nonrootuser to docker group
+      user:
+        name: "{{ nonrootuser }}"
+        group: docker
+
+
+
+
+
+
+
+
+
+
+
