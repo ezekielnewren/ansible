@@ -1,0 +1,66 @@
+---
+- hosts: all
+  become: true
+  pre_tasks:
+    - name: minimum ansible version
+      vars:
+        minver: "2.9.27"
+      assert:
+        that: "ansible_version.full is version_compare('{{ minver }}', '>=')"
+        msg: "You must update Ansible to at least {{ minver }} to use this version of Drupal VM."
+    - name: required variables
+      debug:
+        msg:
+          - "nonrootuser: {{ nonrootuser }}"
+          - "ansible_distribution_release: {{ ansible_distribution_release }}"
+  tasks:
+    - name: intel virtualization
+      stat:
+        path: /sys/module/kvm_intel/parameters/nested
+      register: intel
+    
+    - name: amd virtualization
+      stat:
+        path: /sys/module/kvm_amd/parameters/nested
+      register: amd
+    
+    - name: enable nested virtualization for intel
+      command: "{{ item }}"
+      with_items:
+        - modprobe -r kvm_intel
+        - modprobe kvm_intel nested=1
+        - echo "options kvm_intel nested=1" > /etc/modprobe.d/kvm.conf
+      when: intel.stat.exists
+
+    - name: enable nested virtualization for amd
+      command: "{{ item }}"
+      with_items:
+        - modprobe -r kvm_amd
+        - modprobe kvm_amd nested=1
+        - echo "options kvm_amd nested=1" > /etc/modprobe.d/kvm.conf
+      when: amd.stat.exists
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
