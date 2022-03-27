@@ -18,11 +18,13 @@
       stat:
         path: /sys/module/kvm_intel/parameters/nested
       register: intel
+      tags: nested virtualization
     
     - name: amd virtualization
       stat:
         path: /sys/module/kvm_amd/parameters/nested
       register: amd
+      tags: nested virtualization
     
     - name: enable nested virtualization for intel
       command: "{{ item }}"
@@ -31,6 +33,7 @@
         - modprobe kvm_intel nested=1
         - echo "options kvm_intel nested=1" > /etc/modprobe.d/kvm.conf
       when: intel.stat.exists
+      tags: nested virtualization
 
     - name: enable nested virtualization for amd
       command: "{{ item }}"
@@ -39,28 +42,59 @@
         - modprobe kvm_amd nested=1
         - echo "options kvm_amd nested=1" > /etc/modprobe.d/kvm.conf
       when: amd.stat.exists
+      tags: nested virtualization
 
+    - name: add apt keys
+      apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        id: E8A032E094D8EB4EA189D270DA418C88A3219F7B
+        state: present
 
+    - name: add hashicorp repo
+      apt_repository:
+        repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+        update_cache: yes
+        state: present
 
+    - name: packages
+      apt:
+        pkg:
+          - build-essential
+          - dnsmasq-base
+          - ebtables
+          - libguestfs-tools
+          - libvirt-clients
+          - libvirt-daemon-system
+          - libvirt-dev
+          - libxml2-dev
+          - libxslt-dev
+          - qemu
+          - qemu-kvm
+          - ruby-dev
+          - vagrant
+          - virtinst
+          - zlib1g-dev
+        state: latest
+        update_cache: yes
 
+    - name: post install
+      command: "{{ item }}"
+      with_items:
+        - usermod -aG libvirt {{ nonrootuser }}
+        - usermod -aG kvm {{ nonrootuser }}
+        - systemctl enable libvirtd
+        - systemctl start libvirtd
+        ## enable virtiofs synced folder
+        - sed -i 's/# *memory_backing_dir/memory_backing_dir/g' /etc/libvirt/qemu.conf
+        - vagrant plugin install vagrant-libvirt vagrant-reload
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    - name: create host-bridge
+      command: "{{ item }}"
+      with_items:
+        - sysctl -w net.ipv4.ip_forward=1
+        - virsh net-define <(echo PG5ldHdvcms+CiAgICA8bmFtZT5ob3N0LWJyaWRnZTwvbmFtZT4KICAgIDxmb3J3YXJkIG1vZGU9ImJyaWRnZSIvPgogICAgPGJyaWRnZSBuYW1lPSJicjAiLz4KPC9uZXR3b3JrPg== | base64 -d)
+        - virsh net-start host-bridge
+        - virsh net-autostart host-bridge
+        - virsh net-list | grep -q host-bridge
 
 
