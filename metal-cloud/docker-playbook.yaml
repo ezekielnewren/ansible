@@ -4,16 +4,28 @@
   pre_tasks:
     - name: minimum ansible version
       vars:
-        minver: "2.9.27"
+        minver: "2.12.0"
       assert:
         that: "ansible_version.full is version_compare('{{ minver }}', '>=')"
-        msg: "You must update Ansible to at least {{ minver }} to use this version of Drupal VM."
+        msg: "You must update Ansible to at least {{ minver }} to use this playbook."
+    
+    - name: fact bridge name
+      set_fact:
+        bridge_name: br0
+
+    - name: fact bridge interface
+      set_fact:
+        bridge_if: "ansible_{{ bridge_name }}"
+    
     - name: required variables
       debug:
         msg:
           - "nonrootuser: {{ nonrootuser }}"
           - "ansible_distribution_release: {{ ansible_distribution_release }}"
           - "ansible_architecture: {{ ansible_architecture }}"
+          - "ip: {{ vars[bridge_if].ipv4.address }}"
+          - "gateway: {{ ansible_default_ipv4.gateway }}"
+          - "network: {{ (vars[bridge_if].ipv4.network + '/' + vars[bridge_if].ipv4.netmask) | ipaddr('network/prefix') }}"
   tasks:
     - name: install dependencies
       apt:
@@ -60,7 +72,15 @@
         name: "{{ nonrootuser }}"
         group: docker
 
+    - name: test for docker host-bridge network
+      shell: docker network list | grep -q "host-bridge"
+      failed_when: false
+      register: result
 
+    - name: create ipvlan
+      shell: "docker network create -d ipvlan --subnet={{ (vars[bridge_if].ipv4.network + '/' + vars[bridge_if].ipv4.netmask) | ipaddr('network/prefix') }} --gateway={{ ansible_default_ipv4.gateway }} -o ipvlan_mode=l2 -o parent={{ bridge_name }} host-bridge"
+      register: result
+      when: result.rc != 0
 
 
 
