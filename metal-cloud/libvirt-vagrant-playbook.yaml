@@ -32,6 +32,7 @@
         - modprobe -r kvm_intel
         - modprobe kvm_intel nested=1
         - echo "options kvm_intel nested=1" > /etc/modprobe.d/kvm.conf
+      ignore_errors: yes
       when: intel.stat.exists
       tags: nested virtualization
 
@@ -41,8 +42,14 @@
         - modprobe -r kvm_amd
         - modprobe kvm_amd nested=1
         - echo "options kvm_amd nested=1" > /etc/modprobe.d/kvm.conf
+      ignore_errors: yes
       when: amd.stat.exists
       tags: nested virtualization
+
+    - name: update and upgrade
+      apt:
+        update_cache: yes
+        upgrade: yes
 
     - name: add apt keys
       apt_key:
@@ -50,15 +57,9 @@
         id: E8A032E094D8EB4EA189D270DA418C88A3219F7B
         state: present
 
-    - name: add hashicorp repo
-      apt_repository:
-        repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
-        update_cache: yes
-        state: present
-
     - name: packages
-      apt:
-        pkg:
+      package:
+        name:
           - build-essential
           - dnsmasq-base
           - ebtables
@@ -71,11 +72,32 @@
           - qemu
           - qemu-kvm
           - ruby-dev
-          - vagrant
           - virtinst
           - zlib1g-dev
-        state: latest
+        state: present
+
+    - name: add hashicorp repo
+      apt_repository:
+        repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
         update_cache: yes
+        state: present
+
+    - name: install vagrant
+      package:
+        name: vagrant
+        state: present
+
+    - name: add swtpm repo
+      apt_repository:
+        repo: ppa:thopiekar/swtpm
+        update_cache: yes
+        state: present
+
+    - name: install swtpm
+      package:
+        name: swtpm
+        state: present
+
 
     - name: post install
       command: "{{ item }}"
@@ -88,13 +110,54 @@
         - sed -i 's/# *memory_backing_dir/memory_backing_dir/g' /etc/libvirt/qemu.conf
         - vagrant plugin install vagrant-libvirt vagrant-reload
 
+    - name: enable ipv4 forwarding
+      lineinfile:
+        dest: /etc/sysctl.conf
+        regexp: '^#\s*net.ipv4.ip_forward=1.*$'
+        line: 'net.ipv4.ip_forward=1'
+
+    - name: enable ipv4 forwarding now
+      shell: sysctl -w net.ipv4.ip_forward=1
+
     - name: create host-bridge
-      command: "{{ item }}"
+      shell: "{{ item }}"
       with_items:
-        - sysctl -w net.ipv4.ip_forward=1
         - virsh net-define <(echo PG5ldHdvcms+CiAgICA8bmFtZT5ob3N0LWJyaWRnZTwvbmFtZT4KICAgIDxmb3J3YXJkIG1vZGU9ImJyaWRnZSIvPgogICAgPGJyaWRnZSBuYW1lPSJicjAiLz4KPC9uZXR3b3JrPg== | base64 -d)
         - virsh net-start host-bridge
         - virsh net-autostart host-bridge
         - virsh net-list | grep -q host-bridge
+      args:
+        executable: /bin/bash
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
