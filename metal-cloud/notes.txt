@@ -1,0 +1,30 @@
+device=/dev/disk/by-id/nvme-Sabrent_7FBC07171DD900188886
+sudo pvcreate -v $device
+sudo vgcreate -v vg-raid $device
+sudo lvcreate -l 100%FREE -n lv-raid vg-raid
+sudo cryptsetup -y -v luksFormat /dev/vg-raid/lv-raid
+sudo cryptsetup luksOpen /dev/vg-raid/lv-raid fde-storage
+
+crypt=/dev/mapper/fde-storage
+sudo pvcreate -v $crypt
+sudo vgcreate -v vg-flex $crypt
+sudo lvcreate -l 100%FREE -n lv-flex vg-flex
+#sudo lvcreate -l 25%FREE -n lv-pm0 vg-flex
+#sudo lvcreate -l 25%FREE -n lv-pm1 vg-flex
+#sudo lvcreate -l 25%FREE -n lv-pm2 vg-flex
+#sudo lvcreate -l 25%FREE -n lv-pm3 vg-flex
+sudo mkfs.xfs /dev/vg-flex/lv-flex
+sudo mkdir /data 2>/dev/null
+#sudo mount /dev/vg-flex/lv-flex /data
+
+## /etc/crypttab
+## fde-storage UUID=2674a815-897f-407b-b160-39e5474dd2e5 none luks
+
+clevis luks bind -d /dev/vg-raid/lv-raid tpm2 '{}'
+
+## /etc/fstab
+## /dev/vg-flex/lv-flex /data xfs defaults 0 1
+## /data/root/var/lib/libvirt/images /var/lib/libvirt/images none defaults,bind 0 0
+
+
+
