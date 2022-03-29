@@ -1,13 +1,14 @@
 ---
 - hosts: all
+  name: libvirt
   become: true
   pre_tasks:
     - name: minimum ansible version
       vars:
-        minver: "2.9.27"
+        minver: "2.12.0"
       assert:
         that: "ansible_version.full is version_compare('{{ minver }}', '>=')"
-        msg: "You must update Ansible to at least {{ minver }} to use this version of Drupal VM."
+        msg: "minimum ansible version {{ minver }}"
     - name: required variables
       debug:
         msg:
@@ -51,10 +52,10 @@
         update_cache: yes
         upgrade: yes
 
-    - name: add apt keys
-      apt_key:
-        url: https://apt.releases.hashicorp.com/gpg
-        id: E8A032E094D8EB4EA189D270DA418C88A3219F7B
+    - name: add swtpm repo
+      apt_repository:
+        repo: ppa:thopiekar/swtpm
+        update_cache: yes
         state: present
 
     - name: packages
@@ -72,32 +73,10 @@
           - qemu
           - qemu-kvm
           - ruby-dev
+          - swtpm
           - virtinst
           - zlib1g-dev
         state: present
-
-    - name: add hashicorp repo
-      apt_repository:
-        repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
-        update_cache: yes
-        state: present
-
-    - name: install vagrant
-      package:
-        name: vagrant
-        state: present
-
-    - name: add swtpm repo
-      apt_repository:
-        repo: ppa:thopiekar/swtpm
-        update_cache: yes
-        state: present
-
-    - name: install swtpm
-      package:
-        name: swtpm
-        state: present
-
 
     - name: post install
       command: "{{ item }}"
@@ -108,7 +87,6 @@
         - systemctl start libvirtd
         ## enable virtiofs synced folder
         - sed -i 's/# *memory_backing_dir/memory_backing_dir/g' /etc/libvirt/qemu.conf
-        - vagrant plugin install vagrant-libvirt vagrant-reload
 
     - name: enable ipv4 forwarding
       lineinfile:
