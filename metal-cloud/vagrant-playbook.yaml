@@ -33,8 +33,20 @@
         state: present
 
     - name: install plugin vagrant-libvirt
-      shell: vagrant plugin install vagrant-libvirt
-    
+      shell: "{{ item }}"
+      remote_user: "{{ nonrootuser }}"
+      args:
+        executable: /bin/bash
+      with_items:
+        - vagrant plugin install vagrant-libvirt
+        - vagrant plugin list | grep -q "vagrant-reload"
+
     - name: install plugin vagrant-reload
-      shell: vagrant plugin install vagrant-reload
+      shell: "{{ item }}"
+      remote_user: "{{ nonrootuser }}"
+      args:
+        executable: /bin/bash
+      with_items:
+        - vagrant plugin install vagrant-reload
+        - vagrant plugin list | grep -q "vagrant-libvirt"
 
