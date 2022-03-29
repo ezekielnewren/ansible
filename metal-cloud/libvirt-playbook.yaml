@@ -15,13 +15,13 @@
           - "nonrootuser: {{ nonrootuser }}"
           - "ansible_distribution_release: {{ ansible_distribution_release }}"
   tasks:
-    - name: intel virtualization
+    - name: has intel virtualization
       stat:
         path: /sys/module/kvm_intel/parameters/nested
       register: intel
       tags: nested virtualization
     
-    - name: amd virtualization
+    - name: has amd virtualization
       stat:
         path: /sys/module/kvm_amd/parameters/nested
       register: amd
@@ -47,18 +47,24 @@
       when: amd.stat.exists
       tags: nested virtualization
 
+
+
+
+
     - name: update and upgrade
       apt:
         update_cache: yes
         upgrade: yes
+      tags: packages
 
     - name: add swtpm repo
       apt_repository:
         repo: ppa:thopiekar/swtpm
         update_cache: yes
         state: present
+      tags: packages
 
-    - name: packages
+    - name: install packages
       package:
         name:
           - build-essential
@@ -77,63 +83,61 @@
           - virtinst
           - zlib1g-dev
         state: present
+      tags: packages
 
-    - name: post install
-      command: "{{ item }}"
-      with_items:
-        - usermod -aG libvirt {{ nonrootuser }}
-        - usermod -aG kvm {{ nonrootuser }}
-        - systemctl enable libvirtd
-        - systemctl start libvirtd
-        ## enable virtiofs synced folder
-        - sed -i 's/# *memory_backing_dir/memory_backing_dir/g' /etc/libvirt/qemu.conf
+
+
+
+
+    - name: add nonrootuser to groups
+      user:
+        name: "{{ nonrootuser }}"
+        state: present
+        groups: libvirt,kvm
+        append: yes
+      tags: post install
+
+    - name: enable virtiofs synced folder
+      replace:
+        path: /etc/libvirt/qemu.conf
+        regexp: '^#\s*memory_backing_dir'
+        replace: 'memory_backing_dir'
+      tags: post install
 
     - name: enable ipv4 forwarding
       lineinfile:
         dest: /etc/sysctl.conf
         regexp: '^#\s*net.ipv4.ip_forward=1.*$'
         line: 'net.ipv4.ip_forward=1'
+      tags: post install
 
     - name: enable ipv4 forwarding now
       shell: sysctl -w net.ipv4.ip_forward=1
+      tags: post install
 
-    - name: create host-bridge
+    - name: service libvirtd
+      systemd:
+        name: libvirtd
+        enabled: yes
+        state: started
+      tags: post install
+
+    - name: is host-bridge defined
+      shell: virsh net-list | grep -q host-bridge
+      failed_when: false
+      register: result
+
+    - name: create host-bridge if not defined
       shell: "{{ item }}"
+      args:
+        executable: /bin/bash
       with_items:
         - virsh net-define <(echo PG5ldHdvcms+CiAgICA8bmFtZT5ob3N0LWJyaWRnZTwvbmFtZT4KICAgIDxmb3J3YXJkIG1vZGU9ImJyaWRnZSIvPgogICAgPGJyaWRnZSBuYW1lPSJicjAiLz4KPC9uZXR3b3JrPg== | base64 -d)
         - virsh net-start host-bridge
         - virsh net-autostart host-bridge
         - virsh net-list | grep -q host-bridge
-      args:
-        executable: /bin/bash
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      when: result.rc != 0
+      tags: post install
 
 
 
