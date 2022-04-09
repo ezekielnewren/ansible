@@ -3,8 +3,9 @@
 if [ -f /tmp/secret.json ]; then
     secret=$(cat /tmp/secret.json)
 else
-    VAULT_ADDR=$1
-    VAULT_TOKEN=$2
+    name=$1
+    VAULT_ADDR=$2
+    VAULT_TOKEN=$3
 
     if [ "$VAULT_ADDR" == "" ] || [ "$VAULT_TOKEN" == "" ]; then
         echo "VAULT_ADDR and VAULT_TOKEN must be passed as the first and second arguments"
