@@ -70,7 +70,8 @@
     - name: add nonrootuser to docker group
       user:
         name: "{{ nonrootuser }}"
-        group: docker
+        groups: docker
+        append: yes
 
     - name: test for docker host-bridge network
       shell: docker network list | grep -q "host-bridge"
