@@ -1,0 +1,19 @@
+network:
+  version: 2
+  ethernets:
+    ethmain:
+      dhcp4: false
+      dhcp6: false
+      match:
+        macaddress: "{{ macaddress }}"
+      set-name: ethmain
+  bridges:
+    br0:
+      dhcp4: true
+      dhcp6: true
+      macaddress: "{{ macaddress }}"
+      interfaces:
+        - ethmain
+      parameters:
+        stp: true
+        forward-delay: 4
