@@ -19,7 +19,7 @@ fi
 
 for file in $(echo "$secret" | jq -r "keys[]" | grep ssh_host); do
     echo $file
-    echo "$secret" | jq -rMc ".data.\"$file\"" > /etc/ssh/$file
+    echo "$secret" | jq -rMc ".\"$file\"" > /etc/ssh/$file
 done
 cd /etc/ssh
 ls -1 | grep "^ssh_host.*key$" | xargs -l chmod 600
