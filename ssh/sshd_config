@@ -7,12 +7,15 @@ HostCertificate /etc/ssh/ssh_host_ecdsa_key.cer
 HostKey /etc/ssh/ssh_host_ed25519_key
 HostCertificate /etc/ssh/ssh_host_ed25519_key.cer
 
+## authentication
+ChallengeResponseAuthentication no
 PermitRootLogin prohibit-password
 PubkeyAuthentication yes
-
 PasswordAuthentication no
 PermitEmptyPasswords no
+UsePAM yes
 
+## authorization
 AllowAgentForwarding yes
 AllowTcpForwarding yes
 X11Forwarding yes
@@ -21,5 +24,4 @@ PrintMotd no
 TCPKeepAlive yes
 
 Subsystem	sftp	/usr/lib/openssh/sftp-server -l INFO
-    ForceCommand internal-sftp
 
