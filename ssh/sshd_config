@@ -19,3 +19,7 @@ X11Forwarding yes
 PermitTTY yes
 PrintMotd no
 TCPKeepAlive yes
+
+Subsystem	sftp	/usr/lib/openssh/sftp-server -l INFO
+    ForceCommand internal-sftp
+
