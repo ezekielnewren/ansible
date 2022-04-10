@@ -1,0 +1,9 @@
+[Unit]
+Description=start gnome keyring for each user under /home
+
+[Service]
+ExecStart=/bin/bash /root/bootup/keyring.sh
+
+[Install]
+WantedBy=multi-user.target
+
