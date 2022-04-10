@@ -12,7 +12,6 @@
     - name: required variables
       debug:
         msg:
-          - "nonrootuser: {{ nonrootuser }}"
           - "macaddress: {{ macaddress }}"
           - "wd: {{ wd }}"
           - "ansible_distribution_release: {{ ansible_distribution_release }}"
