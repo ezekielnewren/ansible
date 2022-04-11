@@ -2,6 +2,7 @@
 Description=start gnome keyring for each user under /home
 
 [Service]
+WorkingDirectory=/root/bootup
 ExecStart=/bin/bash /root/bootup/keyring.sh
 
 [Install]

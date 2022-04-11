@@ -14,6 +14,9 @@
         msg:
           - "wd: {{ wd }}"
           - "ansible_distribution_release: {{ ansible_distribution_release }}"
+
+  ## run gnome-keyring inside a docker container
+  ## https://unix.stackexchange.com/a/548005/293827
   tasks:
     - name: ensure /root/bootup exists
       file:
@@ -23,14 +26,26 @@
   
     - name: copy keyring.sh
       copy:
-        src: "{{ wd }}/systemd/keyring.sh"
+        src: "{{ wd }}/metal_cloud/systemd/keyring.sh"
         dest: /root/bootup
         owner: root
         group: root
+
+    - name: copy root-keyring.sh
+      copy:
+        src: "{{ wd }}/metal_cloud/systemd/root-keyring.sh"
+        dest: /root/bootup
+        owner: root
+        group: root
+
+    - name: set dbus environment variable
+      lineinfile:
+        path: /root/.profile
+        line: "source /root/dbus.sh"
   
     - name: copy keyring.service
       copy:
-        src: "{{ wd }}/systemd/keyring.service"
+        src: "{{ wd }}/metal_cloud/systemd/keyring.service"
         dest: /etc/systemd/system
         owner: root
         group: root

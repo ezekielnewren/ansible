@@ -1,0 +1,16 @@
+# rm /run/dbus/pid
+export DBUS_SESSION_BUS_ADDRESS=$(dbus-daemon --config-file /usr/share/dbus-1/system.conf --print-address)
+export XDG_DATA_DIRS=/usr/local/share:/usr/share:/var/lib/snapd/desktop
+
+# dbus-run-session -- bash
+## kill keyring
+# rm -r ~/.local/share/keyrings
+echo "export DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS" > ~/dbus.sh
+export VAULT_ADDR="https://vault.ezekielnewren.com:8443"; export user=root
+password=$(clevis decrypt tpm2 '{}' < ~/keyring.jwe)
+source <(echo -n $password | gnome-keyring-daemon --unlock)
+source <(echo -n $password | gnome-keyring-daemon --daemonize --login)
+
+secret-tool store --label="vault_token" vault token
+secret-tool lookup vault token
+
