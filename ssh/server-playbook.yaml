@@ -1,0 +1,24 @@
+---
+- name: ssh config
+  hosts: all
+  become: yes
+  tasks:
+  - name: required variables
+    debug:
+      msg:
+        - "hostname: {{ hostname }}"
+        - "wd: {{ wd }}"
+        - "ansible_distribution_release: {{ ansible_distribution_release }}"
+    tags: general
+
+  - name: stat /tmp/secret.json
+    stat: 
+      path: /tmp/secret.json
+    register: secret
+
+  - name: get secrets
+    shell: "curl -H 'X-Vault-Token: {{ VAULT_TOKEN }}' -H 'X-Vault-Request: true' {{ VAULT_ADDR }}/v1/cubbyhole/{{ hostname }} | jq -rMc .data > /tmp/secret.json"
+    args:
+      executable: /bin/bash
+    when: secret.stat.exists == False
+
