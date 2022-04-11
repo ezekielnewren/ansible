@@ -22,3 +22,37 @@
       executable: /bin/bash
     when: secret.stat.exists == False
 
+  - name: write ssh host keys
+    shell: "cat /tmp/secret.json | jq '.\"{{ item }}\"' > /etc/ssh/{{ item }}"
+    args:
+      executable: /bin/bash
+    loop:
+      - "ssh_host_ecdsa_key"
+      - "ssh_host_ecdsa_key.cer"
+      - "ssh_host_ed25519_key"
+      - "ssh_host_ed25519_key.cer"
+      - "ssh_host_rsa_key"
+      - "ssh_host_rsa_key.cer"
+
+  - name: set ssh host key cer permissions
+    file:
+      path: /etc/ssh/{{ item }}
+      owner: root
+      group: root
+      mode: '0644'
+    loop:
+      - "ssh_host_ecdsa_key.cer"
+      - "ssh_host_ed25519_key.cer"
+      - "ssh_host_rsa_key.cer"
+
+  - name: set ssh host key permissions
+    file:
+      path: /etc/ssh/{{ item }}
+      owner: root
+      group: root
+      mode: '0600'
+    loop:
+      - "ssh_host_ecdsa_key"
+      - "ssh_host_ed25519_key"
+      - "ssh_host_rsa_key"
+
