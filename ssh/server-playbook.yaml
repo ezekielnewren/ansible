@@ -56,3 +56,13 @@
       - "ssh_host_ed25519_key"
       - "ssh_host_rsa_key"
 
+  - name: touch /etc/ssh/ssh_known_hosts
+    file:
+      dest: /etc/ssh/ssh_known_hosts
+      state: touch
+
+  - name: setup global known_hosts
+    lineinfile:
+      path: /etc/ssh/ssh_known_hosts
+      line: '@cert-authority * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPhTMqNK5UADz2CqndLcf4X64ug2ERMD8VoWcruT7foI'
+
