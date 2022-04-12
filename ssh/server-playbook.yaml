@@ -17,21 +17,28 @@
     register: secret
 
   - name: generate token
-    shell: "python3 -m metal_cloud.vault -n {{ hostname }} -i"
-    args:
-      executable: /bin/bash
-    when: generate_token|default(false)
-    delegate_to: 127.0.0.1
-    register: VAULT_TOKEN
+    local_action: command python3 -m metal_cloud.vault -n {{ hostname }} -i
+    environment:
+      VAULT_ADDR: "{{ VAULT_ADDR }}"
+      VAULT_TOKEN: "{{ GENERATE_TOKEN }}"
+    when: GENERATE_TOKEN is defined
+    register: ott
+
+  - name: set fact VAULT_TOKEN
+    set_fact:
+      VAULT_TOKEN: "{{ ott.stdout }}"
 
   - name: get secrets
-    shell: "curl -H 'X-Vault-Token: {{ VAULT_TOKEN }}' -H 'X-Vault-Request: true' {{ VAULT_ADDR }}/v1/cubbyhole/{{ hostname }} | jq -rMc .data > /tmp/secret.json"
+    shell: "curl -H 'X-Vault-Token: {{ VAULT_TOKEN }}' -H 'X-Vault-Request: true' {{ VAULT_ADDR }}/v1/cubbyhole/{{ hostname }} | jq -Mc .data > /tmp/secret.json"
     args:
       executable: /bin/bash
     when: secret.stat.exists == False
 
+  - name: check that /tmp/secret.json actually contains secrets
+    command: grep "ssh_host" /tmp/secret.json
+
   - name: write ssh host keys
-    shell: "cat /tmp/secret.json | jq '.\"{{ item }}\"' > /etc/ssh/{{ item }}"
+    shell: "cat /tmp/secret.json | jq -r '.\"{{ item }}\"' > /etc/ssh/{{ item }}"
     args:
       executable: /bin/bash
     loop:
