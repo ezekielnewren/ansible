@@ -1,6 +1,6 @@
 ---
 - hosts: all
-  name: libvirt
+  name: netplan
   become: true
   pre_tasks:
     - name: minimum ansible version
@@ -16,9 +16,9 @@
           - "wd: {{ wd }}"
           - "ansible_distribution_release: {{ ansible_distribution_release }}"
   tasks:
-    - name: has intel virtualization
+    - name: copy netplan template
       template:
-        src: "{{ wd }}/netplan/60-dhcp-bridge.yaml"
+        src: "{{ wd }}/metal_cloud/netplan/60-dhcp-bridge.yaml"
         dest: /etc/netplan/60-dhcp-bridge.yaml
         owner: root
         group: root
