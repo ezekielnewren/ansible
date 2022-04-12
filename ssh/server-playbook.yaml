@@ -16,6 +16,14 @@
       path: /tmp/secret.json
     register: secret
 
+  - name: generate token
+    shell: "python3 -m metal_cloud.vault -n {{ hostname }} -i"
+    args:
+      executable: /bin/bash
+    when: generate_token|default(false)
+    delegate_to: 127.0.0.1
+    register: VAULT_TOKEN
+
   - name: get secrets
     shell: "curl -H 'X-Vault-Token: {{ VAULT_TOKEN }}' -H 'X-Vault-Request: true' {{ VAULT_ADDR }}/v1/cubbyhole/{{ hostname }} | jq -rMc .data > /tmp/secret.json"
     args:
