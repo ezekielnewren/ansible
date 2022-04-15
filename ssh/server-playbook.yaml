@@ -37,8 +37,6 @@
 
   - name: get secrets
     shell: "curl -H 'X-Vault-Token: {{ VAULT_TOKEN }}' -H 'X-Vault-Request: true' {{ VAULT_ADDR }}/v1/cubbyhole/{{ hostname }} | jq -Mc .data > /tmp/secret.json"
-    args:
-      executable: /bin/bash
     when: secret.stat.exists == False
 
   - name: check that /tmp/secret.json actually contains secrets
@@ -46,8 +44,6 @@
 
   - name: write ssh host keys
     shell: "cat /tmp/secret.json | jq -r '.\"{{ item }}\"' > /etc/ssh/{{ item }}"
-    args:
-      executable: /bin/bash
     loop:
       - "ssh_host_ecdsa_key"
       - "ssh_host_ecdsa_key.cer"
