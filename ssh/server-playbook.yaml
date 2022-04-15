@@ -29,6 +29,12 @@
       VAULT_TOKEN: "{{ ott.stdout }}"
     when: VAULT_TOKEN is not defined
 
+  - name: install curl, jq
+    package:
+      name:
+        - curl
+        - jq
+
   - name: get secrets
     shell: "curl -H 'X-Vault-Token: {{ VAULT_TOKEN }}' -H 'X-Vault-Request: true' {{ VAULT_ADDR }}/v1/cubbyhole/{{ hostname }} | jq -Mc .data > /tmp/secret.json"
     args:
