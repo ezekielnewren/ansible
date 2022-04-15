@@ -84,6 +84,11 @@
       path: /etc/ssh/ssh_known_hosts
       line: '@cert-authority * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPhTMqNK5UADz2CqndLcf4X64ug2ERMD8VoWcruT7foI'
 
+  - name: touch /etc/ssh/ssh_config
+    file:
+      path: /etc/ssh/ssh_config
+      state: touch
+
   - name: global ssh config require strict host key checking
     lineinfile:
       dest: /etc/ssh/ssh_config
@@ -98,3 +103,9 @@
       owner: root
       group: root
       mode: '0644'
+
+
+
+
+
+
