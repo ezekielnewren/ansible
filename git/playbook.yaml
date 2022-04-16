@@ -16,15 +16,29 @@
           - "ansible_distribution_release: {{ ansible_distribution_release }}"
       tags: general
 
-    - name: add git ppa
+    - name: stat /usr/bin/apt
+      stat:
+        path: /usr/bin/apt
+      register: stat_apt
+
+    - name: apt add git ppa
       apt_repository:
         repo: ppa:git-core/ppa
         update_cache: yes
+      when: stat_apt.stat.exists
 
-    - name: install git
+    - name: apt install git
       apt:
         name: git
         state: latest
+      when: stat_apt.stat.exists
+
+    - name: generic install git
+      package:
+        name:
+          - git
+        state: present
+      when: not stat_apt.stat.exists
 
     - name: git config
       become_user: "{{ nonrootuser }}"
