@@ -34,4 +34,5 @@
         - git config --global user.name "Ezekiel Newren"
         - git config --global pull.rebase false
         - git config --global init.defaultBranch main
+        - git config --global core.pager cat
 
