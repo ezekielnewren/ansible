@@ -18,7 +18,7 @@
   tasks:
     - name: has intel virtualization
       template:
-        src: "{{ wd }}/netplan/60-dhcp-bridge.yaml"
+        src: "{{ wd }}/metal_cloud/netplan/60-dhcp-bridge.yaml"
         dest: /etc/netplan/60-dhcp-bridge.yaml
         owner: root
         group: root
