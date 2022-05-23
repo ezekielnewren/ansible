@@ -63,6 +63,15 @@
       - "ssh_host_ed25519_key.cer"
       - "ssh_host_rsa_key.cer"
 
+  - name: delete ssh_host_key.pub files
+    file:
+      path: /etc/ssh/{{ item }}
+      state: absent
+    loop:
+      - "ssh_host_ecdsa_key.pub"
+      - "ssh_host_ed25519_key.pub"
+      - "ssh_host_rsa_key.pub"
+
   - name: set ssh host key permissions
     file:
       path: /etc/ssh/{{ item }}
