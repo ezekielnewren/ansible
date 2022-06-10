@@ -1,0 +1,19 @@
+---
+- name: run roles
+  hosts: all
+  pre_tasks:
+    - name: print out extra_vars
+      debug:
+        msg:
+          - "{{ role_list }}"
+          - "ansible_distribution: {{ ansible_distribution }}"
+          - "ansible_distribution_release: {{ ansible_distribution_release }}"
+          - "ansible_distribution_major_version: {{ ansible_distribution_major_version }}"
+
+  tasks:
+    - name: include roles
+      include_role:
+        name: "{{ role_item }}"
+      loop: "{{ role_list }}"
+      loop_control:
+        loop_var: role_item
