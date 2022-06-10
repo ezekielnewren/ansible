@@ -1,0 +1,10 @@
+- name: required variables
+  debug:
+    msg:
+      - "nonrootuser: {{ nonrootuser }}"
+      - "ansible_distribution_release: {{ ansible_distribution_release }}"
+      - "ansible_architecture: {{ ansible_architecture }}"
+      - "ip: {{ vars[bridge_if].ipv4.address }}"
+      - "gateway: {{ ansible_default_ipv4.gateway }}"
+      - "network: {{ (vars[bridge_if].ipv4.network + '/' + vars[bridge_if].ipv4.netmask) | ipaddr('network/prefix') }}"
+

@@ -1,92 +1,78 @@
----
-- hosts: all
-  become: true
-  pre_tasks:
-    - name: minimum ansible version
-      vars:
-        minver: "2.12.0"
-      assert:
-        that: "ansible_version.full is version_compare('{{ minver }}', '>=')"
-        msg: "You must update Ansible to at least {{ minver }} to use this playbook."
-    
-    - name: fact bridge name
-      set_fact:
-        bridge_name: br0
-
-    - name: fact bridge interface
-      set_fact:
-        bridge_if: "ansible_{{ bridge_name }}"
-    
-    - name: required variables
-      debug:
-        msg:
-          - "nonrootuser: {{ nonrootuser }}"
-          - "ansible_distribution_release: {{ ansible_distribution_release }}"
-          - "ansible_architecture: {{ ansible_architecture }}"
-          - "ip: {{ vars[bridge_if].ipv4.address }}"
-          - "gateway: {{ ansible_default_ipv4.gateway }}"
-          - "network: {{ (vars[bridge_if].ipv4.network + '/' + vars[bridge_if].ipv4.netmask) | ipaddr('network/prefix') }}"
-  tasks:
-    - name: install dependencies
-      apt:
-        pkg:
-          - ca-certificates
-          - curl
-          - gnupg
-          - gnupg2
-
-    - name: add docker key
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
-        state: present
-    
-    - name: add docker repo
-      apt_repository:
-        repo: "deb [arch={{ ansible_architecture }} signed-by=9DC858229FC7DD38854AE2D88D81803C0EBFCD88] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
-        update_cache: yes
-        state: present
-
-    - name: install docker
-      package:
-        name:
-          - docker.io
-        state: present
-    
-    - name: determine availble groups
-      getent:
-        database: group
-    
-    - name: determine available users
-      getent:
-        database: passwd
-    
-    - name: ensure that docker group exists
-      group:
-        name: docker
-      when: "'docker' not in ansible_facts.getent_group"
-
-    - name: add nonrootuser to docker group
-      user:
-        name: "{{ nonrootuser }}"
-        groups: docker
-        append: yes
-
-    - name: test for docker host-bridge network
-      shell: docker network list | grep -q "host-bridge"
-      failed_when: false
-      register: result
-
-    - name: create docker host-bridge as an ipvlan
-      shell: "docker network create -d ipvlan --subnet={{ (vars[bridge_if].ipv4.network + '/' + vars[bridge_if].ipv4.netmask) | ipaddr('network/prefix') }} --gateway={{ ansible_default_ipv4.gateway }} -o ipvlan_mode=l2 -o parent={{ bridge_name }} host-bridge"
-      register: result
-      when: result.rc != 0
-
-
-
-
-
-
-
-
-
+- block
+  - name: fact bridge name
+    set_fact:
+      bridge_name: br0
+  
+  - name: fact bridge interface
+    set_fact:
+      bridge_if: "ansible_{{ bridge_name }}"
+  
+  - import_tasks: "{{ role_path }}/tasks/required.yaml"
+  
+  - name: install dependencies
+    apt:
+      pkg:
+        - ca-certificates
+        - curl
+        - gnupg
+        - gnupg2
+  
+  - name: add docker key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+      state: present
+  
+  - name: add docker repo
+    apt_repository:
+      repo: "deb [arch={{ ansible_architecture }} signed-by=9DC858229FC7DD38854AE2D88D81803C0EBFCD88] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+      update_cache: yes
+      state: present
+  
+  - name: install docker
+    package:
+      name:
+        - docker.io
+      state: present
+  
+  - name: determine availble groups
+    getent:
+      database: group
+  
+  - name: determine available users
+    getent:
+      database: passwd
+  
+  - name: ensure that docker group exists
+    group:
+      name: docker
+    when: "'docker' not in ansible_facts.getent_group"
+  
+  - name: add nonrootuser to docker group
+    user:
+      name: "{{ nonrootuser }}"
+      groups: docker
+      append: yes
+  
+  - name: test for docker host-bridge network
+    shell: docker network list | grep -q "host-bridge"
+    failed_when: false
+    register: result
+  
+  - name: create docker host-bridge as an ipvlan
+    shell: "docker network create -d ipvlan --subnet={{ (vars[bridge_if].ipv4.network + '/' + vars[bridge_if].ipv4.netmask) | ipaddr('network/prefix') }} --gateway={{ ansible_default_ipv4.gateway }} -o ipvlan_mode=l2 -o parent={{ bridge_name }} host-bridge"
+    register: result
+    when: result.rc != 0
+  
+  become: yes
+  become_user: yes
+  tags:
+    - docker
+  
+  
+  
+  
+  
+  
+  
+  
