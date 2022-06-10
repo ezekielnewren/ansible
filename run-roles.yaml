@@ -2,6 +2,13 @@
 - name: run roles
   hosts: all
   pre_tasks:
+    - name: minimum ansible version
+      vars:
+        minver: "2.12.0"
+      assert:
+        that: "ansible_version.full is version_compare('{{ minver }}', '>=')"
+        msg: "You must update Ansible to at least {{ minver }} to use this playbook."
+    
     - name: print out extra_vars
       debug:
         msg:
