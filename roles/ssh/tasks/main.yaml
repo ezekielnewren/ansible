@@ -1,19 +1,17 @@
-- block
+- block:
   - name: required variables
     debug:
       msg:
         - "sshuser: {{ sshuser }}"
-        - "ansible_distribution_release: {{ ansible_distribution_release }}"
-    tags: general
 
   - name: authorized_key
     authorized_key:
-      user: "{{ nonrootuser }}"
+      user: "{{ sshuser }}"
       state: present
       key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAkr+o7iAJOYWY27TEl2d/8TdUTvCsOTJdgJByg+eV5I ezekielnewren@gmail.com"
-    tags: nonrootuser
 
   become: yes
   become_user: root
   tags:
     - ssh
+
