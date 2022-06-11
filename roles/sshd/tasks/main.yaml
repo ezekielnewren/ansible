@@ -1,4 +1,16 @@
 - block:
+  - name: install curl, jq
+    package:
+      name:
+        - curl
+        - jq
+
+  become: yes
+  become_user: root
+  tags:
+    - sshd  
+
+- block:
   - name: required variables
     debug:
       msg:
@@ -22,12 +34,6 @@
       VAULT_TOKEN: "{{ ott.stdout }}"
     when: VAULT_TOKEN is not defined
 
-  - name: install curl, jq
-    package:
-      name:
-        - curl
-        - jq
-
   - name: get secrets
     shell: "curl -H 'X-Vault-Token: {{ VAULT_TOKEN }}' -H 'X-Vault-Request: true' {{ VAULT_ADDR }}/v1/cubbyhole/{{ hostname }} | jq -Mc .data > /tmp/secret.json"
     when: secret.stat.exists == False
@@ -35,6 +41,10 @@
   - name: check that /tmp/secret.json actually contains secrets
     command: grep "ssh_host" /tmp/secret.json
 
+  tags:
+    - sshd
+
+- block:
   - name: write ssh host keys
     shell: "cat /tmp/secret.json | jq -r '.\"{{ item }}\"' > /etc/ssh/{{ item }}"
     loop:
