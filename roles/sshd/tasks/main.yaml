@@ -1,15 +1,8 @@
----
-- name: ssh config
-  hosts: all
-  become: yes
-  tasks:
+- block:
   - name: required variables
     debug:
       msg:
         - "hostname: {{ hostname }}"
-        - "wd: {{ wd }}"
-        - "ansible_distribution_release: {{ ansible_distribution_release }}"
-    tags: general
 
   - name: stat /tmp/secret.json
     stat: 
@@ -107,14 +100,14 @@
 
   - name: copy sshd_config
     copy:
-      src: "{{ wd }}/ssh/sshd_config"
+      src: "sshd_config"
       dest: "/etc/ssh/sshd_config"
       owner: root
       group: root
       mode: '0644'
 
-
-
-
-
+  become: yes
+  become_user: root
+  tags:
+    - sshd
 
