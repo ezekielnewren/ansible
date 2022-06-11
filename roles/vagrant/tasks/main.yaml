@@ -1,58 +1,50 @@
----
-- hosts: all
-  name: vagrant
-  become: true
-  pre_tasks:
-    - name: minimum ansible version
-      vars:
-        minver: "2.12.0"
-      assert:
-        that: "ansible_version.full is version_compare('{{ minver }}', '>=')"
-        msg: "minimum ansible version {{ minver }}"
+- block:
+  - name: package facts
+    package_facts:
+      manager: auto
 
-    - name: package facts
-      package_facts:
-        manager: auto
+  - name: required variables
+    debug:
+      msg:
+        - "nonrootuser: {{ nonrootuser }}"
 
-    - name: required variables
-      debug:
-        msg:
-          - "nonrootuser: {{ nonrootuser }}"
-          - "ansible_distribution_release: {{ ansible_distribution_release }}"
-  tasks:
-    - name: add hashicorp key
-      apt_key:
-        url: https://apt.releases.hashicorp.com/gpg
-        id: E8A032E094D8EB4EA189D270DA418C88A3219F7B
-        state: present
+  - name: add hashicorp key
+    apt_key:
+      url: https://apt.releases.hashicorp.com/gpg
+      id: E8A032E094D8EB4EA189D270DA418C88A3219F7B
+      state: present
     
-    - name: add hashicorp repo
-      apt_repository:
-        repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
-        update_cache: yes
-        state: present
+  - name: add hashicorp repo
+    apt_repository:
+      repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+      update_cache: yes
+      state: present
 
-    - name: install vagrant
-      package:
-        name: vagrant
-        state: present
+  - name: install vagrant
+    package:
+      name: vagrant
+      state: present
 
-    - name: install plugin vagrant-reload
-      shell: "{{ item }}"
-      remote_user: "{{ nonrootuser }}"
-      args:
-        executable: /bin/bash
-      with_items:
-        - vagrant plugin install vagrant-reload
-        - vagrant plugin list | grep -q "vagrant-reload"
+  - name: install plugin vagrant-reload
+    shell: "{{ item }}"
+    remote_user: "{{ nonrootuser }}"
+    args:
+      executable: /bin/bash
+    with_items:
+      - vagrant plugin install vagrant-reload
+      - vagrant plugin list | grep -q "vagrant-reload"
 
-    - name: install plugin vagrant-libvirt if libvirt-dev is installed
-      shell: "{{ item }}"
-      remote_user: "{{ nonrootuser }}"
-      args:
-        executable: /bin/bash
-      with_items:
-        - vagrant plugin install vagrant-libvirt
-        - vagrant plugin list | grep -q "vagrant-libvirt"
-      when: "'libvirt-dev' in ansible_facts.packages"
+  - name: install plugin vagrant-libvirt if libvirt-dev is installed
+    shell: "{{ item }}"
+    remote_user: "{{ nonrootuser }}"
+    args:
+      executable: /bin/bash
+    with_items:
+      - vagrant plugin install vagrant-libvirt
+      - vagrant plugin list | grep -q "vagrant-libvirt"
+    when: "'libvirt-dev' in ansible_facts.packages"
 
+  become: yes
+  become_user: root
+  tags:
+    - vagrant
