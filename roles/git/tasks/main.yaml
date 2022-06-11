@@ -1,52 +1,46 @@
----
-- hosts: all
-  become: true
-  pre_tasks:
-    - name: minimum ansible version
-      vars:
-        minver: "2.9.27"
-      assert:
-        that: "ansible_version.full is version_compare('{{ minver }}', '>=')"
-        msg: "You must update Ansible to at least {{ minver }} to use this version of Drupal VM."
-  tasks:
-    - name: required variables
-      debug:
-        msg:
-          - "nonrootuser: {{ nonrootuser }}"
-          - "ansible_distribution_release: {{ ansible_distribution_release }}"
-      tags: general
+- block:
+  - name: required variables
+    debug:
+      msg:
+        - "nonrootuser: {{ nonrootuser }}"
+        - "ansible_distribution_release: {{ ansible_distribution_release }}"
+    tags: general
 
-    - name: stat /usr/bin/apt
-      stat:
-        path: /usr/bin/apt
-      register: stat_apt
+  - name: stat /usr/bin/apt
+    stat:
+      path: /usr/bin/apt
+    register: stat_apt
 
-    - name: apt add git ppa
-      apt_repository:
-        repo: ppa:git-core/ppa
-        update_cache: yes
-      when: stat_apt.stat.exists
+  - name: apt add git ppa
+    apt_repository:
+      repo: ppa:git-core/ppa
+      update_cache: yes
+    when: stat_apt.stat.exists
 
-    - name: apt install git
-      apt:
-        name: git
-        state: latest
-      when: stat_apt.stat.exists
+  - name: apt install git
+    apt:
+      name: git
+      state: latest
+    when: stat_apt.stat.exists
 
-    - name: generic install git
-      package:
-        name:
-          - git
-        state: present
-      when: not stat_apt.stat.exists
+  - name: generic install git
+    package:
+      name:
+        - git
+      state: present
+    when: not stat_apt.stat.exists
 
-    - name: git config
-      become_user: "{{ nonrootuser }}"
-      command: "{{ item }}"
-      with_items:
-        - git config --global user.email "ezekielnewren@gmail.com"
-        - git config --global user.name "Ezekiel Newren"
-        - git config --global pull.rebase false
-        - git config --global init.defaultBranch main
-        - git config --global core.pager cat
+  become: yes
+  become_user: root
+
+- name: git config
+  become: yes
+  become_user: "{{ nonrootuser }}"
+  command: "{{ item }}"
+  with_items:
+    - git config --global user.email "ezekielnewren@gmail.com"
+    - git config --global user.name "Ezekiel Newren"
+    - git config --global pull.rebase false
+    - git config --global init.defaultBranch main
+    - git config --global core.pager cat
 
