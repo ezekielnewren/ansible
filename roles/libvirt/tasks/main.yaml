@@ -1,145 +1,119 @@
----
-- hosts: all
-  name: libvirt
-  become: true
-  pre_tasks:
-    - name: minimum ansible version
-      vars:
-        minver: "2.12.0"
-      assert:
-        that: "ansible_version.full is version_compare('{{ minver }}', '>=')"
-        msg: "minimum ansible version {{ minver }}"
-    - name: required variables
-      debug:
-        msg:
-          - "nonrootuser: {{ nonrootuser }}"
-          - "ansible_distribution_release: {{ ansible_distribution_release }}"
-  tasks:
-    - name: has intel virtualization
-      stat:
-        path: /sys/module/kvm_intel/parameters/nested
-      register: intel
-      tags: nested virtualization
-    
-    - name: has amd virtualization
-      stat:
-        path: /sys/module/kvm_amd/parameters/nested
-      register: amd
-      tags: nested virtualization
-    
-    - name: enable nested virtualization for intel
-      command: "{{ item }}"
-      with_items:
-        - modprobe -r kvm_intel
-        - modprobe kvm_intel nested=1
-        - echo "options kvm_intel nested=1" > /etc/modprobe.d/kvm.conf
-      ignore_errors: yes
-      when: intel.stat.exists
-      tags: nested virtualization
+- block:
+  - name: required variables
+    debug:
+      msg:
+        - "nonrootuser: {{ nonrootuser }}"
+        - "ansible_distribution_release: {{ ansible_distribution_release }}"
 
-    - name: enable nested virtualization for amd
-      command: "{{ item }}"
-      with_items:
-        - modprobe -r kvm_amd
-        - modprobe kvm_amd nested=1
-        - echo "options kvm_amd nested=1" > /etc/modprobe.d/kvm.conf
-      ignore_errors: yes
-      when: amd.stat.exists
-      tags: nested virtualization
+  - name: has intel virtualization
+    stat:
+      path: /sys/module/kvm_intel/parameters/nested
+    register: intel
+
+  - name: has amd virtualization
+    stat:
+      path: /sys/module/kvm_amd/parameters/nested
+    register: amd
+
+  - name: enable nested virtualization for intel
+    command: "{{ item }}"
+    with_items:
+      - modprobe -r kvm_intel
+      - modprobe kvm_intel nested=1
+      - echo "options kvm_intel nested=1" > /etc/modprobe.d/kvm.conf
+    ignore_errors: yes
+    when: intel.stat.exists
+
+  - name: enable nested virtualization for amd
+    command: "{{ item }}"
+    with_items:
+      - modprobe -r kvm_amd
+      - modprobe kvm_amd nested=1
+      - echo "options kvm_amd nested=1" > /etc/modprobe.d/kvm.conf
+    ignore_errors: yes
+    when: amd.stat.exists
 
 
 
+  - name: update and upgrade
+    apt:
+      update_cache: yes
+      upgrade: yes
 
+  - name: add swtpm repo
+    apt_repository:
+      repo: ppa:thopiekar/swtpm
+      update_cache: yes
+      state: present
 
-    - name: update and upgrade
-      apt:
-        update_cache: yes
-        upgrade: yes
-      tags: packages
-
-    - name: add swtpm repo
-      apt_repository:
-        repo: ppa:thopiekar/swtpm
-        update_cache: yes
-        state: present
-      tags: packages
-
-    - name: install packages
-      package:
-        name:
-          - build-essential
-          - dnsmasq-base
-          - ebtables
-          - libguestfs-tools
-          - libvirt-clients
-          - libvirt-daemon-system
-          - libvirt-dev
-          - libxml2-dev
-          - libxslt-dev
-          - qemu
-          - qemu-kvm
-          - ruby-dev
-          - swtpm
-          - virtinst
-          - zlib1g-dev
-        state: present
-      tags: packages
+  - name: install packages
+    package:
+      name:
+        - build-essential
+        - dnsmasq-base
+        - ebtables
+        - libguestfs-tools
+        - libvirt-clients
+        - libvirt-daemon-system
+        - libvirt-dev
+        - libxml2-dev
+        - libxslt-dev
+        - qemu
+        - qemu-kvm
+        - ruby-dev
+        - swtpm
+        - virtinst
+        - zlib1g-dev
+      state: present
 
 
 
+  - name: add nonrootuser to groups
+    user:
+      name: "{{ nonrootuser }}"
+      state: present
+      groups: libvirt,kvm
+      append: yes
 
+  - name: enable virtiofs synced folder
+    replace:
+      path: /etc/libvirt/qemu.conf
+      regexp: '^#\s*memory_backing_dir'
+      replace: 'memory_backing_dir'
 
-    - name: add nonrootuser to groups
-      user:
-        name: "{{ nonrootuser }}"
-        state: present
-        groups: libvirt,kvm
-        append: yes
-      tags: post install
+  - name: enable ipv4 forwarding
+    lineinfile:
+      dest: /etc/sysctl.conf
+      regexp: '^#\s*net.ipv4.ip_forward=1.*$'
+      line: 'net.ipv4.ip_forward=1'
 
-    - name: enable virtiofs synced folder
-      replace:
-        path: /etc/libvirt/qemu.conf
-        regexp: '^#\s*memory_backing_dir'
-        replace: 'memory_backing_dir'
-      tags: post install
+  - name: enable ipv4 forwarding now
+    shell: sysctl -w net.ipv4.ip_forward=1
 
-    - name: enable ipv4 forwarding
-      lineinfile:
-        dest: /etc/sysctl.conf
-        regexp: '^#\s*net.ipv4.ip_forward=1.*$'
-        line: 'net.ipv4.ip_forward=1'
-      tags: post install
+  - name: service libvirtd
+    systemd:
+      name: libvirtd
+      enabled: yes
+      state: started
 
-    - name: enable ipv4 forwarding now
-      shell: sysctl -w net.ipv4.ip_forward=1
-      tags: post install
+  - name: is host-bridge defined
+    shell: virsh net-list | grep -q host-bridge
+    failed_when: false
+    register: result
 
-    - name: service libvirtd
-      systemd:
-        name: libvirtd
-        enabled: yes
-        state: started
-      tags: post install
+  - name: create host-bridge if not defined
+    shell: "{{ item }}"
+    args:
+      executable: /bin/bash
+    with_items:
+      - virsh net-define <(echo PG5ldHdvcms+CiAgICA8bmFtZT5ob3N0LWJyaWRnZTwvbmFtZT4KICAgIDxmb3J3YXJkIG1vZGU9ImJyaWRnZSIvPgogICAgPGJyaWRnZSBuYW1lPSJicjAiLz4KPC9uZXR3b3JrPg== | base64 -d)
+      - virsh net-start host-bridge
+      - virsh net-autostart host-bridge
+      - virsh net-list | grep -q host-bridge
+    when: result.rc != 0
 
-    - name: is host-bridge defined
-      shell: virsh net-list | grep -q host-bridge
-      failed_when: false
-      register: result
-
-    - name: create host-bridge if not defined
-      shell: "{{ item }}"
-      args:
-        executable: /bin/bash
-      with_items:
-        - virsh net-define <(echo PG5ldHdvcms+CiAgICA8bmFtZT5ob3N0LWJyaWRnZTwvbmFtZT4KICAgIDxmb3J3YXJkIG1vZGU9ImJyaWRnZSIvPgogICAgPGJyaWRnZSBuYW1lPSJicjAiLz4KPC9uZXR3b3JrPg== | base64 -d)
-        - virsh net-start host-bridge
-        - virsh net-autostart host-bridge
-        - virsh net-list | grep -q host-bridge
-      when: result.rc != 0
-      tags: post install
-
-
-
-
+  become: yes
+  become_user: root
+  tags:
+    - libvirt
 
