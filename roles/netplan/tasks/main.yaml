@@ -1,26 +1,20 @@
----
-- hosts: all
-  name: netplan
-  become: true
-  pre_tasks:
-    - name: minimum ansible version
-      vars:
-        minver: "2.12.0"
-      assert:
-        that: "ansible_version.full is version_compare('{{ minver }}', '>=')"
-        msg: "minimum ansible version {{ minver }}"
-    - name: required variables
-      debug:
-        msg:
-          - "macaddress: {{ macaddress }}"
-          - "wd: {{ wd }}"
-          - "ansible_distribution_release: {{ ansible_distribution_release }}"
-  tasks:
-    - name: copy netplan template
-      template:
-        src: "{{ wd }}/metal_cloud/netplan/60-dhcp-bridge.yaml"
-        dest: /etc/netplan/60-dhcp-bridge.yaml
-        owner: root
-        group: root
-        mode: '0600'
+- block:
+  - name: required variables
+    debug:
+      msg:
+        - "macaddress: {{ macaddress }}"
+        - "ansible_distribution_release: {{ ansible_distribution_release }}"
+
+  - name: copy netplan template
+    template:
+      src: "60-dhcp-bridge.yaml"
+      dest: /etc/netplan/60-dhcp-bridge.yaml
+      owner: root
+      group: root
+      mode: '0600'
+
+  become: yes
+  become_user: root
+  tags:
+    - netplan
 
