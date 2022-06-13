@@ -7,6 +7,11 @@
       name: "root"
       password: "{{ password | password_hash('sha512') }}"
 
+  - name: set hostname
+    hostname:
+      name: "{{ hostname }}"
+      use: systemd
+
   - name: create nonrootuser
     user:
       name: "{{ nonrootuser }}"
