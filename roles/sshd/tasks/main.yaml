@@ -8,7 +8,7 @@
   become: yes
   become_user: root
   tags:
-    - sshd  
+    - sshd
 
 - block:
   - name: required variables
@@ -17,7 +17,7 @@
         - "hostname: {{ hostname }}"
 
   - name: stat /tmp/secret.json
-    stat: 
+    stat:
       path: /tmp/secret.json
     register: secret
 
@@ -32,7 +32,7 @@
   - name: set fact VAULT_TOKEN
     set_fact:
       VAULT_TOKEN: "{{ ott.stdout }}"
-    when: VAULT_TOKEN is not defined
+    when: VAULT_TOKEN is not defined and GENERATE_TOKEN is defined
 
   - name: get secrets
     shell: "curl -H 'X-Vault-Token: {{ VAULT_TOKEN }}' -H 'X-Vault-Request: true' {{ VAULT_ADDR }}/v1/cubbyhole/{{ hostname }} | jq -Mc .data > /tmp/secret.json"
