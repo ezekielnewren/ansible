@@ -116,6 +116,11 @@
       group: root
       mode: '0644'
 
+  - name: do not delete ssh keys cloud init
+    lineinfile:
+      dest: /etc/cloud/cloud.cfg
+      line: "ssh_deletekeys: false"
+
   become: yes
   become_user: root
   tags:
