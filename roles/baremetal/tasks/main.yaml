@@ -13,6 +13,21 @@
       shell: /bin/bash
       password_lock: yes
 
+  - name: hush login
+    file:
+      path: /home/{{ nonrootuser }}/.hushlogin
+      owner: "{{ nonrootuser }}"
+      group: "{{ nonrootuser }}"
+      state: touch
+
+  - name: bash aliases
+    copy:
+      src: .bash_aliases
+      dest: /home/{{ nonrootuser }}/.bash_aliases
+      owner: "{{ nonrootuser }}"
+      group: "{{ nonrootuser }}"
+      mode: "0644"
+
   become: yes
   become_user: root
   tags:
