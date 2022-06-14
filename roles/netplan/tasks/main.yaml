@@ -5,6 +5,11 @@
         - "macaddress: {{ macaddress }}"
         - "ansible_distribution_release: {{ ansible_distribution_release }}"
 
+  - name: install bridge-utils
+    package:
+      name:
+        - bridge-utils
+
   - name: copy netplan template
     template:
       src: "60-dhcp-bridge.yaml"
