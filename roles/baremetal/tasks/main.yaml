@@ -1,7 +1,7 @@
 - block:
   - set_fact:
       password: "{{ lookup('file', '/tmp/password') }}"
-    
+
   - name: set root password
     user:
       name: "root"
@@ -51,8 +51,8 @@
       - sshd
       - netplan
       - keyring
-      - libvirt
-    loop_var: role_other
+    loop_control:
+      loop_var: role_other
 
   become: yes
   become_user: root
