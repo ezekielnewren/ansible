@@ -40,6 +40,20 @@
       group: "{{ nonrootuser }}"
       mode: "0644"
 
+  - set_fact:
+      sshuser: "{{ nonrootuser }}"
+
+  - name: run other roles
+    include_role:
+      name: "{{ role_other }}"
+    loop:
+      - ssh
+      - sshd
+      - netplan
+      - keyring
+      - libvirt
+    loop_var: role_other
+
   become: yes
   become_user: root
   tags:
