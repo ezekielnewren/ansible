@@ -29,15 +29,20 @@
       owner: root
       group: root
 
-  - name: enable and start keyring.service
+  - name: enable keyring.service
+    systemd:
+      name: keyring
+      daemon_reload: no
+      enabled: yes
+
+  - name: attempt to start keyring.service right now
     systemd:
       name: keyring
       daemon_reload: yes
-      enabled: yes
       state: started
+    failed_when: false
 
   become: yes
   become_user: root
   tags:
     - keyring
-
