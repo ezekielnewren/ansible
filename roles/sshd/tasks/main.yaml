@@ -121,6 +121,12 @@
       dest: /etc/cloud/cloud.cfg
       line: "ssh_deletekeys: false"
 
+  - name: allow port 22
+    ufw:
+      rule: allow
+      port: '22'
+      proto: tcp
+
   become: yes
   become_user: root
   tags:

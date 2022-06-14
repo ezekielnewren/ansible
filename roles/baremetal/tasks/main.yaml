@@ -40,6 +40,17 @@
       group: "{{ nonrootuser }}"
       mode: "0644"
 
+  - name: ensure that ufw is installed
+    package:
+      name: ufw
+      state: present
+
+  - name: enable firewall
+    ufw:
+      direction: incoming
+      policy: deny
+      state: enabled
+
   - set_fact:
       sshuser: "{{ nonrootuser }}"
 
