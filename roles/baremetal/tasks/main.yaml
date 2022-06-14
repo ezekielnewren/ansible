@@ -50,7 +50,7 @@
       - ssh
       - sshd
       - netplan
-      - keyring
+      #- keyring
     loop_control:
       loop_var: role_other
 
