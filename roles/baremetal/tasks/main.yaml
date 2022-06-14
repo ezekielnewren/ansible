@@ -15,7 +15,7 @@
       name: "{{ nonrootuser }}"
       shell: /bin/bash
       password_lock: yes
-      group: sudo
+      groups: sudo
       append: yes
 
   - name: allow the use of sudo without a password
