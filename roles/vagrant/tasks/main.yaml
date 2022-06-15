@@ -25,6 +25,12 @@
       name: vagrant
       state: present
 
+  become: yes
+  become_user: root
+  tags:
+    - vagrant
+
+- block:
   - name: install plugin vagrant-reload
     shell: "{{ item }}"
     remote_user: "{{ nonrootuser }}"
@@ -45,6 +51,6 @@
     when: "'libvirt-dev' in ansible_facts.packages"
 
   become: yes
-  become_user: root
+  become_user: "{{ nonrootuser }}"
   tags:
     - vagrant
