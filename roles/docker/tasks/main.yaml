@@ -1,4 +1,4 @@
-- block
+- block:
   - name: fact bridge name
     set_fact:
       bridge_name: br0
