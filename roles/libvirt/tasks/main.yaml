@@ -15,6 +15,10 @@
       path: /sys/module/kvm_amd/parameters/nested
     register: amd
 
+  - name: assert that nested virtualization is possible
+    assert:
+      that: intel.stat.exists or amd.stat.exists
+
   - name: enable nested virtualization for intel
     command: "{{ item }}"
     with_items:
