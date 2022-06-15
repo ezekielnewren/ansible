@@ -65,7 +65,7 @@
     when: result.rc != 0
   
   become: yes
-  become_user: yes
+  become_user: root
   tags:
     - docker
   
