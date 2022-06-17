@@ -1,0 +1,19 @@
+- block:
+  - name: step 2 ensure directory /etc/ceph exists
+    file:
+      path: /etc/ceph
+      state: directory
+
+  - name: step 3-7 copy ceph.conf template
+    template:
+      src: "ceph.conf"
+      dest: /etc/ceph/{{ CLUSTER_NAME }}.conf
+      owner: root
+      group: root
+      mode: '0600'
+
+  become: yes
+  become_user: ceph
+  tags:
+    - ceph
+
