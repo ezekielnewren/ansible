@@ -31,7 +31,7 @@
       - /var/lib/ceph/bootstrap-osd/{{CLUSTER_NAME}}.keyring
 
   - name: step 13 generate monitor map
-    shell: monmaptool --create --add {{MONITOR.keys()|join(',')}} {{MONITOR.values()|join(',')}} --fsid {{FSID}} /tmp/monmap
+    shell: monmaptool --create --add {{CNODE.keys()|join(',')}} {{CNODE.values()|join(',')}} --fsid {{FSID}} /tmp/monmap
 
   become: yes
   become_user: ceph

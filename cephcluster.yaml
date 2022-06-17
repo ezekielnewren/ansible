@@ -17,14 +17,14 @@
           - "ansible_distribution_major_version: {{ ansible_distribution_major_version }}"
 
     - set_fact:
-        MONITOR: "{{ MONITOR|default({}) | combine({item: lookup('dig', item)}) }}"
+        CNODE: "{{ CNODE|default({}) | combine({item: lookup('dig', item)}) }}"
       with_items: "{{ play_hosts }}"
 
     - name: csv list of hosts
       debug:
         msg:
-          - "{{ MONITOR.keys() | join(',') }}"
-          - "{{ MONITOR.values() | join(',') }}"
+          - "{{ CNODE.keys() | join(',') }}"
+          - "{{ CNODE.values() | join(',') }}"
 
   ## https://docs.ceph.com/en/latest/install/index_manual/
   
