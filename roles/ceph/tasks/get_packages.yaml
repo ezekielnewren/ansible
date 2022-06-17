@@ -1,3 +1,4 @@
+## https://docs.ceph.com/en/latest/install/get-packages/#get-packages
 - block:
   - name: add ceph key
     apt_key:
