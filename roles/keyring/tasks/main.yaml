@@ -20,6 +20,7 @@
       dest: /root/bootup
       owner: root
       group: root
+      mode: '0700'
     loop:
       - keyring.sh
       - root-keyring.sh
