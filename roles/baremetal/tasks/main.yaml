@@ -51,6 +51,19 @@
       policy: deny
       state: enabled
 
+  - name: allow dhcp
+    shell: "{{ item }}"
+    with_items:
+      - "ufw allow bootps"
+      - "ufw allow 53/tcp"
+      - "ufw allow 53/udp"
+
+  - name: allow forwarding of all packets
+    replace:
+      path: /etc/default/ufw
+      regexp: 'DEFAULT_FORWARD_POLICY="DROP"'
+      replace: 'DEFAULT_FORWARD_POLICY="ACCEPT"'
+
   - set_fact:
       sshuser: "{{ nonrootuser }}"
 
