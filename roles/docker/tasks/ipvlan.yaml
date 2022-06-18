@@ -1,0 +1,38 @@
+- block:
+  - name: required variables
+    debug:
+      msg:
+        - "ip: {{ vars[bridge_if].ipv4.address }}"
+        - "gateway: {{ ansible_default_ipv4.gateway }}"
+        - "network: {{ (vars[bridge_if].ipv4.network + '/' + vars[bridge_if].ipv4.netmask) | ipaddr('network/prefix') }}"
+
+  - name: fact bridge name
+    set_fact:
+      bridge_name: br0
+  
+  - name: fact bridge interface
+    set_fact:
+      bridge_if: "ansible_{{ bridge_name }}"
+  
+  - name: test for docker host-bridge network
+    shell: docker network list | grep -q "host-bridge"
+    failed_when: false
+    register: result
+  
+  - name: create docker host-bridge as an ipvlan
+    shell: "docker network create -d ipvlan --subnet={{ (vars[bridge_if].ipv4.network + '/' + vars[bridge_if].ipv4.netmask) | ipaddr('network/prefix') }} --gateway={{ ansible_default_ipv4.gateway }} -o ipvlan_mode=l2 -o parent={{ bridge_name }} host-bridge"
+    register: result
+    when: result.rc != 0
+  
+  become: yes
+  become_user: root
+  tags:
+    - docker
+  
+  
+  
+  
+  
+  
+  
+  
