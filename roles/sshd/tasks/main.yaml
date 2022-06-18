@@ -34,9 +34,14 @@
       VAULT_TOKEN: "{{ ott.stdout }}"
     when: VAULT_TOKEN is not defined and GENERATE_TOKEN is defined
 
-  - name: get secrets
-    shell: "curl -H 'X-Vault-Token: {{ VAULT_TOKEN }}' -H 'X-Vault-Request: true' {{ VAULT_ADDR }}/v1/cubbyhole/{{ hostname }} | jq -Mc .data > /tmp/secret.json"
+  - name: download secrets
+    delegate_to: 127.0.0.1
+    shell: "curl -H 'X-Vault-Token: {{ VAULT_TOKEN }}' -H 'X-Vault-Request: true' {{ VAULT_ADDR }}/v1/cubbyhole/{{ hostname }} | jq -Mc .data"
+    register: SSHD_KEYS
     when: secret.stat.exists == False
+
+  - name: copy secrets to guest
+    copy: content="{{ SSHD_KEYS.stdout }}" dest=/tmp/secret.json
 
   - name: check that /tmp/secret.json actually contains secrets
     command: grep "ssh_host" /tmp/secret.json
@@ -116,10 +121,15 @@
       group: root
       mode: '0644'
 
+  - stat:
+      path: /etc/cloud/cloud.cfg
+    register: result
+
   - name: do not delete ssh keys cloud init
     lineinfile:
       dest: /etc/cloud/cloud.cfg
       line: "ssh_deletekeys: false"
+    when: result.stat.exists == True
 
   - name: allow port 22
     ufw:

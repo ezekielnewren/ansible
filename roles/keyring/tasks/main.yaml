@@ -1,6 +1,13 @@
 - block:
   ## run gnome-keyring inside a docker container
   ## https://unix.stackexchange.com/a/548005/293827
+  - name: install gnome-keyring and dependencies
+    package:
+      name:
+        - systemd-container
+        - libsecret-tools
+        - gnome-keyring
+  
   - name: ensure /root/bootup exists
     file:
       path: /root/bootup

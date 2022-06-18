@@ -1,0 +1,5 @@
+[ceph_cluster]
+pm[0:2] ansible_ssh_user=metal nonrootuser=metal ansible_python_interpreter=/usr/bin/python3
+
+[metal]
+pm[0:2] ansible_ssh_user=metal nonrootuser=metal ansible_python_interpreter=/usr/bin/python3

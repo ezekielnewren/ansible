@@ -1,0 +1,52 @@
+## https://docs.ceph.com/en/latest/install/manual-deployment/#monitor-bootstrapping
+- block:
+  - name: step 2 ensure directory /etc/ceph exists
+    file:
+      path: /etc/ceph
+      state: directory
+      owner: ceph
+      group: ceph
+    become: yes
+    become_user: root
+
+  - name: step 3-7 copy ceph.conf template
+    template:
+      src: "ceph.conf"
+      dest: /etc/ceph/{{ CLUSTER_NAME }}.conf
+      mode: '0600'
+
+  - name: step 8 create keyring for the cluster
+    shell: ceph-authtool --create-keyring /tmp/{{CLUSTER_NAME}}.keyring -a {{SECRET['mon.']}} -n mon. --cap mon 'allow *'
+
+  - name: step 9 create administrator keyring
+    shell: ceph-authtool --create-keyring /etc/ceph/{{CLUSTER_NAME}}.client.admin.keyring -a {{SECRET['client.admin']}} -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *'
+
+  - name: step 10 create bootstrap-osd keyring
+    shell: ceph-authtool --create-keyring /var/lib/ceph/bootstrap-osd/{{CLUSTER_NAME}}.keyring -a {{SECRET['client.bootstrap-osd']}} -n client.bootstrap-osd --cap mon 'profile bootstrap-osd' --cap mgr 'allow r'
+
+  - name: step 11 merge the keyrings into {{CLUSTER_NAME}}.keyring
+    shell: ceph-authtool /tmp/{{CLUSTER_NAME}}.keyring --import-keyring {{item}}
+    with_items:
+      - /etc/ceph/{{CLUSTER_NAME}}.client.admin.keyring
+      - /var/lib/ceph/bootstrap-osd/{{CLUSTER_NAME}}.keyring
+
+  - name: step 13 generate monitor map
+    shell: monmaptool --clobber --create --add {{CNODE.keys()|join(',')}} {{CNODE.values()|join(',')}} --fsid {{FSID}} /tmp/monmap
+
+  - name: step 14 create a default data directory on the monitor hosts
+    file:
+      path: /var/lib/ceph/mon/{{CLUSTER_NAME}}-{{item}}
+      state: directory
+      owner: ceph
+      group: ceph
+    with_items: "{{play_hosts}}"
+
+  - name: step 15
+    shell: ceph ceph-mon [--cluster {{CLUSTER_NAME}}] --mkfs -i {{inventory_hostname}} --monmap /tmp/monmap --keyring /tmp/{{CLUSTER_NAME}}.keyring
+
+
+  become: yes
+  become_user: ceph
+  tags:
+    - ceph
+
