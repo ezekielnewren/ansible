@@ -10,6 +10,11 @@
   - name: set hostname
     shell: "echo {{ hostname }} > /etc/hostname"
 
+  - name: make sure the ubuntu user doesn't exist
+    user:
+      name: "ubuntu"
+      state: absent
+
   - name: create nonrootuser
     user:
       name: "{{ nonrootuser }}"
