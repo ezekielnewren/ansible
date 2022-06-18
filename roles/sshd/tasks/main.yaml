@@ -42,6 +42,7 @@
 
   - name: copy secrets to guest
     copy: content="{{ SSHD_KEYS.stdout }}" dest=/tmp/secret.json
+    when: secret.stat.exists == False
 
   - name: check that /tmp/secret.json actually contains secrets
     command: grep "ssh_host" /tmp/secret.json
