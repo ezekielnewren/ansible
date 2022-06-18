@@ -31,7 +31,19 @@
       - /var/lib/ceph/bootstrap-osd/{{CLUSTER_NAME}}.keyring
 
   - name: step 13 generate monitor map
-    shell: monmaptool --create --add {{CNODE.keys()|join(',')}} {{CNODE.values()|join(',')}} --fsid {{FSID}} /tmp/monmap
+    shell: monmaptool --clobber --create --add {{CNODE.keys()|join(',')}} {{CNODE.values()|join(',')}} --fsid {{FSID}} /tmp/monmap
+
+  - name: step 14 create a default data directory on the monitor hosts
+    file:
+      path: /var/lib/ceph/mon/{{CLUSTER_NAME}}-{{item}}
+      state: directory
+      owner: ceph
+      group: ceph
+    with_items: "{{play_hosts}}"
+
+  - name: step 15
+    shell: ceph ceph-mon [--cluster {{CLUSTER_NAME}}] --mkfs -i {{inventory_hostname}} --monmap /tmp/monmap --keyring /tmp/{{CLUSTER_NAME}}.keyring
+
 
   become: yes
   become_user: ceph
