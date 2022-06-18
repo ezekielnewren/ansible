@@ -116,10 +116,15 @@
       group: root
       mode: '0644'
 
+  - stat:
+      path: /etc/cloud/cloud.cfg
+    register: result
+
   - name: do not delete ssh keys cloud init
     lineinfile:
       dest: /etc/cloud/cloud.cfg
       line: "ssh_deletekeys: false"
+    when: result.stat.exists == True
 
   - name: allow port 22
     ufw:
