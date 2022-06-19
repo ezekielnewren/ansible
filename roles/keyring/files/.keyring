@@ -1,0 +1,10 @@
+export VAULT_ADDR="https://vault.ezekielnewren.com:8443"
+if keyring.sh; then
+    export VAULT_TOKEN="$(secret-tool lookup vault token)"
+    if [ "$VAULT_TOKEN" == "" ]; then
+        read -sp "VAULT_TOKEN: " password
+        echo -n $password | secret-tool store --label="VAULT_TOKEN" vault token
+        export VAULT_TOKEN="$(secret-tool lookup vault token)"
+    fi
+fi
+

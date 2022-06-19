@@ -1,0 +1,20 @@
+- block:
+  - set_fact:
+      HOME: "/home/{{ nonrootuser }}"
+
+  - name: copy keyring.sh
+    copy:
+      src: .keyring
+      dest: "{{ HOME }}/"
+      mode: '0755'
+
+  - name: source .keyring
+    lineinfile:
+      path: "{{ HOME }}/.bash_aliases"
+      line: "source {{ HOME }}/.keyring"
+
+  become: yes
+  become_user: "{{ nonrootuser }}"
+  tags:
+    - keyring
+

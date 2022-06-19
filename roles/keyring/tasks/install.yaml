@@ -1,0 +1,77 @@
+- block:
+  ## run gnome-keyring inside a docker container
+  ## https://unix.stackexchange.com/a/548005/293827
+  - name: install gnome-keyring and dependencies
+    package:
+      name:
+        - systemd-container
+        - libsecret-tools
+        - gnome-keyring
+  
+  - name: make sure that gnome-keyring recommends are absent
+    package:
+      name:
+        - libpam-gnome-keyring
+        - gnome-keyring-pkcs11
+      state: absent
+  
+  - name: delete gnome-keyring*.desktop files from /etc/xdg/autostart
+    file:
+      path: "/etc/xdg/autostart/{{ item }}"
+      state: absent
+    with_items:
+      - gnome-keyring-pkcs11.desktop
+      - gnome-keyring-secrets.desktop
+      - gnome-keyring-ssh.desktop
+  
+  - name: ensure /root/bootup exists
+    file:
+      path: /root/bootup
+      recurse: no
+      state: directory
+
+  - name: copy keyring.sh
+    copy:
+      src: keyring.sh
+      dest: /usr/local/bin
+      owner: root
+      group: root
+      mode: '0755'
+
+  - name: copy .keyring
+    copy:
+      src: .keyring
+      dest: /usr/local/bin
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: set dbus environment variable
+    lineinfile:
+      path: /root/.profile
+      line: "source /root/dbus.sh"
+
+  - name: copy keyring.service
+    copy:
+      src: "keyring.service"
+      dest: /etc/systemd/system
+      owner: root
+      group: root
+
+  - name: enable keyring.service
+    systemd:
+      name: keyring
+      daemon_reload: no
+      enabled: yes
+
+  - name: attempt to start keyring.service right now
+    systemd:
+      name: keyring
+      daemon_reload: yes
+      state: started
+    failed_when: false
+
+  become: yes
+  become_user: root
+  tags:
+    - keyring
