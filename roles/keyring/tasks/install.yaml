@@ -35,6 +35,14 @@
       path: /root/.profile
       line: "source /root/dbus.sh"
 
+  - name: copy keyring.sh
+    copy:
+      src: keyring.sh
+      dest: /usr/local/bin
+      owner: root
+      group: root
+      mode: '0755'
+
   - name: copy keyring.service
     copy:
       src: "keyring.service"
