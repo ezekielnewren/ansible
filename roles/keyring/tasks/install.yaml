@@ -30,22 +30,6 @@
       recurse: no
       state: directory
 
-  - name: copy keyring.sh
-    copy:
-      src: keyring.sh
-      dest: /usr/local/bin
-      owner: root
-      group: root
-      mode: '0755'
-
-  - name: copy .keyring
-    copy:
-      src: .keyring
-      dest: /usr/local/bin
-      owner: root
-      group: root
-      mode: '0644'
-
   - name: set dbus environment variable
     lineinfile:
       path: /root/.profile
