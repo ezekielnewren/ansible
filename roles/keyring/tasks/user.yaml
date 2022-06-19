@@ -8,6 +8,11 @@
       dest: "{{ HOME }}/"
       mode: '0755'
 
+  - name: ensure bash aliases exists
+    file:
+      path: "{{ HOME }}/.bash_aliases"
+      state: touch
+
   - name: source .keyring
     lineinfile:
       path: "{{ HOME }}/.bash_aliases"
