@@ -21,27 +21,13 @@
       path: /tmp/secret.json
     register: secret
 
-  - name: generate token
-    local_action: command python3 -m metal_cloud.vault -n {{ hostname }} -i
-    environment:
-      VAULT_ADDR: "{{ VAULT_ADDR }}"
-      VAULT_TOKEN: "{{ GENERATE_TOKEN }}"
-    when: GENERATE_TOKEN is defined
-    register: ott
-
-  - name: set fact VAULT_TOKEN
+  - name: lookup secrets directly
     set_fact:
-      VAULT_TOKEN: "{{ ott.stdout }}"
-    when: VAULT_TOKEN is not defined and GENERATE_TOKEN is defined
-
-  - name: download secrets
-    delegate_to: 127.0.0.1
-    shell: "curl -H 'X-Vault-Token: {{ VAULT_TOKEN }}' -H 'X-Vault-Request: true' {{ VAULT_ADDR }}/v1/cubbyhole/{{ hostname }} | jq -Mc .data"
-    register: SSHD_KEYS
+      SSHD_KEYS: "{{ lookup('hashivault', '{{ hostname }}', mount_point='/service/machine', version=2) }}"
     when: secret.stat.exists == False
 
   - name: copy secrets to guest
-    copy: content="{{ SSHD_KEYS.stdout }}" dest=/tmp/secret.json
+    copy: content="{{ SSHD_KEYS }}" dest=/tmp/secret.json
     when: secret.stat.exists == False
 
   - name: check that /tmp/secret.json actually contains secrets
