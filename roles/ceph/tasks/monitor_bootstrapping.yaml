@@ -4,6 +4,7 @@
     file:
       path: /etc/ceph
       state: directory
+      recurse: yes
       owner: ceph
       group: ceph
       mode: "g+rwxs"
@@ -14,7 +15,11 @@
     template:
       src: "ceph.conf"
       dest: /etc/ceph/ceph.conf
+      owner: ceph
+      group: ceph
       mode: '0660'
+    become: yes
+    become_user: root
 
   - name: step 8 create keyring for the cluster
     shell: ceph-authtool --create-keyring /tmp/ceph.keyring -a {{SECRET['mon.']}} -n mon. --cap mon 'allow *'
@@ -42,6 +47,8 @@
       group: ceph
       mode: "g+rwxs"
     with_items: "{{play_hosts}}"
+    become: yes
+    become_user: root
 
   - name: step 15
     shell: ceph ceph-mon [--cluster ceph] --mkfs -i {{inventory_hostname}} --monmap /tmp/monmap --keyring /tmp/ceph.keyring
