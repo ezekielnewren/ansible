@@ -22,4 +22,3 @@
   become_user: root
   tags:
     - ceph
-
