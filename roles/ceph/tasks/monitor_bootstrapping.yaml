@@ -4,7 +4,7 @@
     file:
       path: /etc/ceph
       state: directory
-      recurse: yes
+      recurse: no
       owner: ceph
       group: ceph
       mode: "g+rwxs"
@@ -54,7 +54,7 @@
       recurse: yes
       owner: ceph
       group: ceph
-      mode: "g+rwxs"
+      mode: "g+rw"
 
   - name: change ownership of /tmp/ceph.keyring and /tmp/monmap
     file:
