@@ -8,8 +8,6 @@
       owner: ceph
       group: ceph
       mode: "g+rwxs"
-    become: yes
-    become_user: root
 
   - name: step 3-7 copy ceph.conf template
     template:
@@ -18,17 +16,18 @@
       owner: ceph
       group: ceph
       mode: '0660'
-    become: yes
-    become_user: root
 
   - name: step 8 create keyring for the cluster
-    shell: ceph-authtool --create-keyring /tmp/ceph.keyring -a {{SECRET['mon.']}} -n mon. --cap mon 'allow *'
+    # shell: ceph-authtool --create-keyring /tmp/ceph.keyring -a {{SECRET['mon.']}} -n mon. --cap mon 'allow *'
+    shell: "ceph-authtool --create-keyring /tmp/ceph.keyring --gen-key -n mon. --cap mon 'allow *'"
 
   - name: step 9 create administrator keyring
-    shell: ceph-authtool --create-keyring /etc/ceph/ceph.client.admin.keyring -a {{SECRET['client.admin']}} -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *'
+    # shell: ceph-authtool --create-keyring /etc/ceph/ceph.client.admin.keyring -a {{SECRET['client.admin']}} -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *'
+    shell: ceph-authtool --create-keyring /etc/ceph/ceph.client.admin.keyring --gen-key -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *'
 
   - name: step 10 create bootstrap-osd keyring
-    shell: ceph-authtool --create-keyring /var/lib/ceph/bootstrap-osd/ceph.keyring -a {{SECRET['client.bootstrap-osd']}} -n client.bootstrap-osd --cap mon 'profile bootstrap-osd' --cap mgr 'allow r'
+    # shell: ceph-authtool --create-keyring /var/lib/ceph/bootstrap-osd/ceph.keyring -a {{SECRET['client.bootstrap-osd']}} -n client.bootstrap-osd --cap mon 'profile bootstrap-osd' --cap mgr 'allow r'
+    shell: ceph-authtool --create-keyring /var/lib/ceph/bootstrap-osd/ceph.keyring --gen-key -n client.bootstrap-osd --cap mon 'profile bootstrap-osd' --cap mgr 'allow r'
 
   - name: step 11 merge the keyrings into ceph.keyring
     shell: ceph-authtool /tmp/ceph.keyring --import-keyring {{item}}
@@ -47,14 +46,36 @@
       group: ceph
       mode: "g+rwxs"
     with_items: "{{play_hosts}}"
-    become: yes
-    become_user: root
+
+  - name: make ceph the owner and group for /etc/ceph recursively
+    file:
+      path: /etc/ceph
+      state: directory
+      recurse: yes
+      owner: ceph
+      group: ceph
+      mode: "g+rwxs"
+
+  - name: change ownership of /tmp/ceph.keyring and /tmp/monmap
+    file:
+      path: "{{ item }}"
+      owner: ceph
+      group: ceph
+      mode: "0660"
+    with_items:
+      - /tmp/ceph.keyring
+      - /tmp/monmap
 
   - name: step 15
-    shell: ceph ceph-mon [--cluster ceph] --mkfs -i {{inventory_hostname}} --monmap /tmp/monmap --keyring /tmp/ceph.keyring
+    shell: sudo -u ceph ceph-mon --mkfs -i {{inventory_hostname}} --monmap /tmp/monmap --keyring /tmp/ceph.keyring
 
+  - name: enable and start ceph-mon at ceph0
+    systemd:
+      name: ceph-mon@{{inventory_hostname}}
+      enabled: yes
+      state: started
 
   become: yes
-  become_user: ceph
+  become_user: root
   tags:
     - ceph
