@@ -44,11 +44,11 @@
       update_cache: yes
       upgrade: yes
 
-  - name: add swtpm repo
-    apt_repository:
-      repo: ppa:thopiekar/swtpm
-      update_cache: yes
-      state: present
+  #- name: add swtpm repo
+  #  apt_repository:
+  #    repo: ppa:thopiekar/swtpm
+  #    update_cache: yes
+  #    state: present
 
   - name: install packages
     package:
