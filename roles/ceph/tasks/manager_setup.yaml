@@ -1,0 +1,32 @@
+## https://docs.ceph.com/en/latest/mgr/administrator/#mgr-administrator-guide
+- block:
+  - set_fact:
+      MGR_NAME: "mgr{{ CNODE_INDEX }}"
+
+  - name: mkdir -p /var/lib/ceph/mgr/ceph-{{ MGR_NAME }}
+    file:
+      path: /var/lib/ceph/mgr/ceph-{{ MGR_NAME }}
+      state: directory
+      owner: ceph
+      group: ceph
+
+  - name:
+    stat:
+      path: /var/lib/ceph/mgr/ceph-{{ MGR_NAME }}/keyring
+    register: ceph_manager_result
+
+  - name: create keyring
+    shell: ceph auth get-or-create mgr.{{ MGR_NAME }} mon 'allow profile mgr' osd 'allow *' mds 'allow *' > /var/lib/ceph/mgr/ceph-{{ MGR_NAME }}/keyring
+    when: not ceph_manager_result.stat.exists
+
+  - name: enable and start the ceph-mgr service
+    systemd:
+      name: ceph-mgr@{{ MGR_NAME }}
+      enabled: yes
+      state: started
+
+  become: yes
+  become_user: root
+  tags:
+    - ceph
+    - ceph_manager

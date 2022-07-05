@@ -24,4 +24,4 @@
 
 - include: get_packages.yaml
 - include: monitor_bootstrapping.yaml
-
+- include: manager_setup.yaml
