@@ -1,3 +1,8 @@
+- systemd:
+    name: ceph-mon@{{inventory_hostname}}
+  register: service_cephmon
+
+
 ## https://docs.ceph.com/en/latest/install/manual-deployment/#monitor-bootstrapping
 - block:
   - name: step 2 ensure directory /etc/ceph exists
@@ -17,17 +22,25 @@
       group: ceph
       mode: '0660'
 
+  - stat:
+      path: /tmp/ceph.keyring
+    register: ceph_monitor_result
+
+  ## run this command for each keyring and store it in hashicorp vault
+  # ceph-authtool --gen-print-key
+
   - name: step 8 create keyring for the cluster
-    # shell: ceph-authtool --create-keyring /tmp/ceph.keyring -a {{SECRET['mon.']}} -n mon. --cap mon 'allow *'
-    shell: "ceph-authtool --create-keyring /tmp/ceph.keyring --gen-key -n mon. --cap mon 'allow *'"
+    shell: ceph-authtool --create-keyring /tmp/ceph.keyring -a {{SECRET['keyring']['mon.']}} -n mon. --cap mon 'allow *'
+    # shell: "ceph-authtool --create-keyring /tmp/ceph.keyring --gen-key -n mon. --cap mon 'allow *'"
+    when: not ceph_monitor_result.stat.exists
 
   - name: step 9 create administrator keyring
-    # shell: ceph-authtool --create-keyring /etc/ceph/ceph.client.admin.keyring -a {{SECRET['client.admin']}} -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *'
-    shell: ceph-authtool --create-keyring /etc/ceph/ceph.client.admin.keyring --gen-key -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *'
+    shell: ceph-authtool --create-keyring /etc/ceph/ceph.client.admin.keyring -a {{SECRET['keyring']['client.admin']}} -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *'
+    # shell: ceph-authtool --create-keyring /etc/ceph/ceph.client.admin.keyring --gen-key -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *'
 
   - name: step 10 create bootstrap-osd keyring
-    # shell: ceph-authtool --create-keyring /var/lib/ceph/bootstrap-osd/ceph.keyring -a {{SECRET['client.bootstrap-osd']}} -n client.bootstrap-osd --cap mon 'profile bootstrap-osd' --cap mgr 'allow r'
-    shell: ceph-authtool --create-keyring /var/lib/ceph/bootstrap-osd/ceph.keyring --gen-key -n client.bootstrap-osd --cap mon 'profile bootstrap-osd' --cap mgr 'allow r'
+    shell: ceph-authtool --create-keyring /var/lib/ceph/bootstrap-osd/ceph.keyring -a {{SECRET['keyring']['client.bootstrap-osd']}} -n client.bootstrap-osd --cap mon 'profile bootstrap-osd' --cap mgr 'allow r'
+    # shell: ceph-authtool --create-keyring /var/lib/ceph/bootstrap-osd/ceph.keyring --gen-key -n client.bootstrap-osd --cap mon 'profile bootstrap-osd' --cap mgr 'allow r'
 
   - name: step 11 merge the keyrings into ceph.keyring
     shell: ceph-authtool /tmp/ceph.keyring --import-keyring {{item}}
@@ -69,7 +82,7 @@
   - name: step 15
     shell: sudo -u ceph ceph-mon --mkfs -i {{inventory_hostname}} --monmap /tmp/monmap --keyring /tmp/ceph.keyring
 
-  - name: enable and start ceph-mon at ceph0
+  - name: enable and start ceph-mon at host
     systemd:
       name: ceph-mon@{{inventory_hostname}}
       enabled: yes
@@ -77,5 +90,7 @@
 
   become: yes
   become_user: root
+  when: service_cephmon.status.ActiveState != 'active'
   tags:
     - ceph
+    - ceph_monitor
