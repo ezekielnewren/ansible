@@ -1,0 +1,24 @@
+- name: install jq tpm2 and clevis packages
+  package:
+    name:
+      - jq
+      - tpm2-abrmd
+      - tpm2-tools
+      - clevis
+      - clevis-tpm2
+      - clevis-luks
+      - clevis-initramfs
+      - clevis-udisks2
+      - clevis-systemd
+
+- name: read secrets from vault
+  set_fact:
+    SECRET: "{{ lookup('hashivault', '{{ inventory_hostname }}', mount_point='/service/machine', version=2) }}"
+
+- set_fact:
+    SECRET: "{{ SECRET | combine({'fde': { k: {'path': v}}}, recursive=true) }}"
+  vars:
+    k: "{{ item.key }}"
+    v: "/dev/disk/by-id/{{ item.value['bus'] }}-{{ item.key }}"
+  with_dict: "{{ SECRET['fde'] }}"
+  no_log: true
