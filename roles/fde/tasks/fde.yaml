@@ -1,0 +1,16 @@
+- block:
+  - name: create luks container
+    luks_device:
+      type: "luks2"
+      device: "{{ item.value['path'] }}"
+      name: "luks-{{ item.key }}"
+      label: "{{ item.key }}"
+      state: "opened"
+      passphrase: "{{ item.value['password'] }}"
+    with_dict: "{{ SECRET['fde'] }}"
+    no_log: true
+
+  become: yes
+  become_user: root
+  tags:
+    - fde

@@ -22,3 +22,5 @@
     v: "/dev/disk/by-id/{{ item.value['bus'] }}-{{ item.key }}"
   with_dict: "{{ SECRET['fde'] }}"
   no_log: true
+
+- include: fde.yaml
