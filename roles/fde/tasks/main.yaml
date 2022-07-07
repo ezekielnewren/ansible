@@ -15,9 +15,39 @@
   set_fact:
     SECRET: "{{ lookup('hashivault', '{{ inventory_hostname }}', mount_point='/service/machine', version=2) }}"
 
-- set_fact:
+- name: add the path to the machine secrets dictionary
+  set_fact:
     SECRET: "{{ SECRET | combine({'fde': { item.key: {'path': '/dev/disk/by-id/'+item.value['bus']+'-'+item.key}}}, recursive=true) }}"
   with_dict: "{{ SECRET['fde'] }}"
+  no_log: true
+
+- name: stat all block devices
+  stat:
+    path: "{{ item.value['path'] }}"
+  with_dict: "{{ SECRET['fde'] }}"
+  no_log: true
+  register: stat_result
+
+- name: add stat result to secrets dictionary
+  set_fact:
+    SECRET: "{{ SECRET | combine({'fde': { item['item']['key']: {'stat': item['stat']}}}, recursive=true) }}"
+  with_items: "{{ stat_result.results }}"
+  no_log: true
+
+- name: test if bound
+  shell: "clevis luks list -d {{ item.value['path'] }} -s 1"
+  with_dict: "{{ SECRET['fde'] }}"
+  no_log: true
+  changed_when: false
+  failed_when: false
+  register: result_clevis_list
+  become: yes
+  become_user: root
+
+- name: add bound boolean
+  set_fact:
+    SECRET: "{{ SECRET | combine({'fde': { item['item']['key']: {'bound': item['rc'] == 0}}}, recursive=true) }}"
+  with_items: "{{ result_clevis_list.results }}"
   no_log: true
 
 - include: fde.yaml
