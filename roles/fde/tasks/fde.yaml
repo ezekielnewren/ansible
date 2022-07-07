@@ -10,6 +10,20 @@
     with_dict: "{{ SECRET['fde'] }}"
     no_log: true
 
+  - name: clevis luks bind not bound drives
+    shell: "echo -n '{{ item.value['password'] }}' | clevis luks bind -s 1 -k - -d {{ item.value['path'] }} tpm2 '{}'"
+    when: "not item.value['bound']"
+    changed_when: "not item.value['bound']"
+    no_log: true
+    with_dict: "{{ SECRET['fde'] }}"
+
+  - name: add drive to /etc/crypttab
+    lineinfile:
+      path: "/etc/crypttab"
+      line: "{{ item.key }} {{ item.value['path'] }} none luks"
+    no_log: true
+    with_dict: "{{ SECRET['fde'] }}"
+
   become: yes
   become_user: root
   tags:
