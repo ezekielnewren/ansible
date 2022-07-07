@@ -16,10 +16,7 @@
     SECRET: "{{ lookup('hashivault', '{{ inventory_hostname }}', mount_point='/service/machine', version=2) }}"
 
 - set_fact:
-    SECRET: "{{ SECRET | combine({'fde': { k: {'path': v}}}, recursive=true) }}"
-  vars:
-    k: "{{ item.key }}"
-    v: "/dev/disk/by-id/{{ item.value['bus'] }}-{{ item.key }}"
+    SECRET: "{{ SECRET | combine({'fde': { item.key: {'path': '/dev/disk/by-id/'+item.value['bus']+'-'+item.key}}}, recursive=true) }}"
   with_dict: "{{ SECRET['fde'] }}"
   no_log: true
 
