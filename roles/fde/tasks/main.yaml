@@ -37,3 +37,4 @@
   no_log: true
 
 - include: fde.yaml
+- include: lvm.yaml

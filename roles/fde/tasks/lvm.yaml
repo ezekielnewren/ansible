@@ -1,0 +1,11 @@
+- block:
+  - name: create volume groups
+    lvg:
+      vg: "{{ item.key }}"
+      pvs: "/dev/mapper/{{ item.key }}"
+      state: "present"
+    with_dict: "{{ SECRET['fde'] }}"
+    no_log: true
+
+  become: yes
+  become_user: root
