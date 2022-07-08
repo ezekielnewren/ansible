@@ -8,23 +8,26 @@
       state: "opened"
       passphrase: "{{ item.value['password'] }}"
     with_dict: "{{ SECRET['fde'] }}"
-    no_log: true
 
-  - name: clevis luks bind not bound drives
+  - name: kill slot 1 on all devices
+    shell: "echo -n {{ item.value['password'] }} | cryptsetup luksKillSlot {{ item.value['path'] }} 1"
+    with_dict: "{{ SECRET['fde'] }}"
+    register: result_killslot
+    failed_when: false
+    changed_when: result_killslot.rc == 0
+
+  - name: run clevis luks bind on all drives for slot 1 unconditionally
     shell: "echo -n '{{ item.value['password'] }}' | clevis luks bind -s 1 -k - -d {{ item.value['path'] }} tpm2 '{}'"
-    when: "not item.value['bound']"
-    changed_when: "not item.value['bound']"
-    no_log: true
     with_dict: "{{ SECRET['fde'] }}"
 
   - name: add drive to /etc/crypttab
     lineinfile:
       path: "/etc/crypttab"
       line: "{{ item.key }} {{ item.value['path'] }} none luks"
-    no_log: true
     with_dict: "{{ SECRET['fde'] }}"
 
   become: yes
   become_user: root
+  no_log: true
   tags:
     - fde
