@@ -10,6 +10,8 @@
       - clevis-initramfs
       - clevis-udisks2
       - clevis-systemd
+  become: yes
+  become_user: root
 
 - name: read secrets from vault
   set_fact:
