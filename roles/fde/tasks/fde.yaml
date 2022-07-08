@@ -3,7 +3,7 @@
     luks_device:
       type: "luks2"
       device: "{{ item.value['path'] }}"
-      name: "luks-{{ item.key }}"
+      name: "{{ item.key }}"
       label: "{{ item.key }}"
       state: "opened"
       passphrase: "{{ item.value['password'] }}"
