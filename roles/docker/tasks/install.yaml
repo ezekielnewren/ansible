@@ -8,10 +8,19 @@
         - gnupg2
   
   - name: add docker key
-    apt_key:
-      url: https://download.docker.com/linux/ubuntu/gpg
-      id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
-      state: present
+    shell: curl https://download.docker.com/linux/ubuntu/gpg | gpg2 --dearmor -o- > /etc/apt/trusted.gpg.d/docker.gpg
+  
+  - name: get sha256sum of docker.gpg
+    stat:
+      path: /etc/apt/trusted.gpg.d/docker.gpg
+      checksum_algorithm: sha256
+      get_checksum: yes
+    register: docker_stat
+  
+  - name: verify docker.gpg
+    fail:
+      msg: "docker.gpg hash mismatch"
+    when: docker_stat.stat.checksum != "a09e26b72228e330d55bf134b8eaca57365ef44bf70b8e27c5f55ea87a8b05e2"
   
   - name: add docker repo
     apt_repository:
