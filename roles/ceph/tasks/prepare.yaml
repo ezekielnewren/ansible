@@ -1,0 +1,29 @@
+- block:
+  - name: install ceph-common and cephadm
+    package:
+      name:
+        - cephadm
+        - ceph-common
+        - ceph-volume
+
+  - name: step 2 ensure directory /etc/ceph exists
+    file:
+      path: /etc/ceph
+      state: directory
+      recurse: no
+      owner: ceph
+      group: ceph
+      mode: "g+rwxs"
+
+  - name: copy ceph-template.conf template
+    template:
+      src: "ceph-template.conf"
+      dest: /etc/ceph/ceph-template.conf
+      owner: ceph
+      group: ceph
+      mode: '0660'
+
+  become: yes
+  become_user: root
+  tags:
+    - ceph

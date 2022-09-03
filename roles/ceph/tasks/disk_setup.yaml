@@ -15,18 +15,18 @@
 
   - name: create group for each device
     lvg:
-      vg: "{{ item.key }}"
-      pvs: "/dev/mapper/{{ item.key }}"
+      vg: "{{ item }}"
+      pvs: "/dev/mapper/{{ item }}"
       state: present
-    with_dict: "{{ FDE }}"
+    with_items: "{{ DRIVE }}"
 
   - name: create volume for each group
     lvol:
-      vg: "{{ item.key }}"
+      vg: "{{ item }}"
       lv: "data"
       size: "100%VG"
       state: "present"
-    with_dict: "{{ FDE }}"
+    with_items: "{{ DRIVE }}"
 
   become: yes
   become_user: root

@@ -6,12 +6,16 @@
     CONFIG: "{{ lookup('hashivault', 'ceph', mount_point='service/secret', version=2)[CLUSTER_NAME] }}"
     FDE: "{{ lookup('hashivault', '{{ inventory_hostname }}', mount_point='service/machine', version=2)['fde'] }}"
 
+- set_fact:
+    DRIVE: "{{ FDE.keys() }}"
+
 - debug:
     msg:
       - "CEPH_VERSION: {{ CEPH_VERSION }}"
       - "CODENAME: {{ CODENAME }}"
       - "CLUSTER_NAME: {{ CLUSTER_NAME }}"
-      - "CONFIG: {{ CONFIG.keys() }}"
+      - "CONFIG: {{ CONFIG }}"
+      - "DRIVE: {{ DRIVE }}"
 
 - set_fact:
     CNODE: "{{ CNODE|default({}) | combine({item: lookup('dig', '{{ item }}')}) }}"
@@ -24,3 +28,4 @@
     msg: "{{ CNODE }}"
 
 - include_tasks: disk_setup.yaml
+- include_tasks: prepare.yaml
