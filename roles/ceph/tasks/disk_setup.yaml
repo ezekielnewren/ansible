@@ -11,9 +11,24 @@
         algorithm: "pbkdf2"
         iteration_count: 1000  ## the minimum allowed by luks
     with_dict: "{{ FDE }}"
+    no_log: true
+
+  - name: create group for each device
+    lvg:
+      vg: "{{ item.key }}"
+      pvs: "/dev/mapper/{{ item.key }}"
+      state: present
+    with_dict: "{{ FDE }}"
+
+  - name: create volume for each group
+    lvol:
+      vg: "{{ item.key }}"
+      lv: "data"
+      size: "100%VG"
+      state: "present"
+    with_dict: "{{ FDE }}"
 
   become: yes
   become_user: root
-  no_log: true
   tags:
     - ceph

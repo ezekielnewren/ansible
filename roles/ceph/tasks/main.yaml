@@ -23,4 +23,4 @@
 - debug:
     msg: "{{ CNODE }}"
 
-- include_tasks: luks.yaml
+- include_tasks: disk_setup.yaml
