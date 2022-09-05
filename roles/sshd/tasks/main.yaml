@@ -118,11 +118,19 @@
       line: "ssh_deletekeys: false"
     when: result.stat.exists == True
 
-  - name: allow port 22
+  - name: ufw allow port 22
     ufw:
       rule: allow
       port: '22'
       proto: tcp
+    when: ansible_facts["os_family"] == "Debian"
+
+  - name: firewalld allow port 22
+    firewalld:
+      service: ssh
+      permanent: yes
+      state: enabled
+    when: ansible_facts["os_family"] == "RedHat"
 
   become: yes
   become_user: root
