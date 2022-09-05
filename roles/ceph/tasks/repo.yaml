@@ -1,0 +1,20 @@
+- name: add ceph key
+  shell: curl https://download.ceph.com/keys/release.asc | gpg2 --dearmor -o- > /etc/apt/keyrings/ceph.gpg
+
+- name: get sha256sum of ceph.gpg
+  stat:
+    path: /etc/apt/keyrings/ceph.gpg
+    checksum_algorithm: sha256
+    get_checksum: yes
+  register: ceph_stat
+
+- name: verify ceph.gpg
+  fail:
+    msg: "ceph.gpg hash mismatch"
+  when: ceph_stat.stat.checksum != "5d408d1e9c496a9fe47889a4fd9de18cf23829bc3768d0f14426fd99c3fba1bd"
+
+- name: add ceph repo
+  apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/ceph.gpg] https://download.ceph.com/debian-{{ CEPH_VERSION }} {{ CODENAME }} main"
+    update_cache: yes
+    state: present

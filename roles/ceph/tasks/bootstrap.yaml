@@ -1,0 +1,14 @@
+- block:
+  - name: run cephadm bootstrap
+    shell: >
+      cephadm bootstrap --fsid {{ CONFIG['fsid'] }}
+      --config /etc/ceph/ceph-template.conf
+      --skip-monitoring-stack
+      --skip-dashboard
+      --mon-ip $(ip -br addr show br0 | awk '{ print $3 }' | cut -d/ -f1)
+      --ssh-user {{ nonrootuser }}
+
+  become: yes
+  become_user: root
+  tags:
+    - ceph

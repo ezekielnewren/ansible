@@ -1,10 +1,11 @@
 - block:
-  - name: install ceph-common and cephadm
+  # - include_tasks: repo.yaml
+
+  - name: install ceph
     package:
       name:
+        - ceph-*
         - cephadm
-        - ceph-common
-        - ceph-volume
 
   - name: step 2 ensure directory /etc/ceph exists
     file:
