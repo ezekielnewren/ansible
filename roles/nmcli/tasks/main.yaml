@@ -1,0 +1,51 @@
+- name: create interface dictionary
+  set_fact:
+    IFACE: "{{ IFACE|default({}) | combine( { ansible_facts[item]['macaddress']|default(None): item } ) }}"
+  with_items: "{{ ansible_interfaces }}"
+
+- name: find ethmain
+  set_fact:
+    ETHMAIN: "{{ IFACE[macaddress] }}"
+
+- block:
+  - name: get connection name of ethmain
+    shell: "nmcli -t -f NAME,DEVICE c show --active | grep :{{ ETHMAIN }}$ | cut -d: -f1"
+    register: result_ethmain
+
+  - name: rename connection containing ethmain
+    shell: "nmcli connection modify '{{ result_ethmain.stdout_lines[0] }}' connection.id ethmain"
+
+  - name: install bridge-utils
+    package:
+      name:
+        - bridge-utils
+        - NetworkManager-libnm
+        - nm-connection-editor
+
+  - name: "ensure ethmain connection exists"
+    nmcli:
+      conn_name: "ethmain"
+      type: "ethernet"
+      ifname: "{{ ETHMAIN }}"
+      state: present
+
+  - name: "create bridge interface and connection"
+    nmcli:
+      conn_name: "br0"
+      type: "bridge"
+      ifname: "br0"
+      mac: "{{ ansible_facts[ETHMAIN]['macaddress'] }}"
+      method4: "auto"
+      autoconnect: true
+      state: present
+
+  - name: "add bridge-slave"
+    nmcli:
+      conn_name: "ethmain"
+      type: "bridge-slave"
+      master: "br0"
+      ifname: "{{ ETHMAIN }}"
+      state: present
+
+  become: yes
+  become_user: root
