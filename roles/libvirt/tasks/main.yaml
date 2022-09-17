@@ -71,6 +71,8 @@
       state: present
 
 
+  # sudo chgrp tss /var/lib/swtpm-localca
+  # sudo chmod g+rwxs /var/lib/swtpm-localca
 
   - name: add nonrootuser to groups
     user:
