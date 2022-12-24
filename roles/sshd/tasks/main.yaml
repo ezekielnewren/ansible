@@ -23,7 +23,7 @@
 
   - name: lookup secrets directly
     set_fact:
-      SSHD_KEYS: "{{ lookup('hashivault', '{{ hostname }}', mount_point='/service/machine', version=2) }}"
+      SSHD_KEYS: "{{ lookup('hashivault', '{{ hostname }}', mount_point='/kv/machine', version=2) }}"
     when: secret.stat.exists == False
 
   - name: copy secrets to guest
@@ -31,62 +31,48 @@
     when: secret.stat.exists == False
 
   - name: check that /tmp/secret.json actually contains secrets
-    command: grep "ssh_host" /tmp/secret.json
+    command: grep "ssh" /tmp/secret.json
 
   tags:
     - sshd
 
 - block:
-  - name: write ssh host keys
-    shell: "cat /tmp/secret.json | jq -r '.\"{{ item }}\"' > /etc/ssh/{{ item }}"
-    loop:
-      - "ssh_host_ecdsa_key"
-      - "ssh_host_ecdsa_key.cer"
-      - "ssh_host_ed25519_key"
-      - "ssh_host_ed25519_key.cer"
-      - "ssh_host_rsa_key"
-      - "ssh_host_rsa_key.cer"
+  - name: delete existing keys
+    shell: "rm /etc/ssh/ssh_host_*"
 
-  - name: set ssh host key cer permissions
-    file:
-      path: /etc/ssh/{{ item }}
-      owner: root
-      group: root
-      mode: '0644'
-    loop:
-      - "ssh_host_ecdsa_key.cer"
-      - "ssh_host_ed25519_key.cer"
-      - "ssh_host_rsa_key.cer"
+  - name: write out ssh_host_key
+    shell: "jq -r .ssh.private_key /tmp/secret.json > /etc/ssh/ssh_host_key"
 
-  - name: delete ssh_host_key.pub files
+  - name: set ssh_host_key permissions
     file:
-      path: /etc/ssh/{{ item }}
-      state: absent
-    loop:
-      - "ssh_host_ecdsa_key.pub"
-      - "ssh_host_ed25519_key.pub"
-      - "ssh_host_rsa_key.pub"
-
-  - name: set ssh host key permissions
-    file:
-      path: /etc/ssh/{{ item }}
+      path: /etc/ssh/ssh_host_key
       owner: root
       group: root
       mode: '0600'
-    loop:
-      - "ssh_host_ecdsa_key"
-      - "ssh_host_ed25519_key"
-      - "ssh_host_rsa_key"
+
+  - name: write out ssh_host_key.cer
+    shell: "jq -r .ssh.certificate /tmp/secret.json > /etc/ssh/ssh_host_key.cer"
+
+  - name: set ssh_host_key.cer permissions
+    file:
+      path: /etc/ssh/ssh_host_key.cer
+      owner: root
+      group: root
+      mode: '0644'
 
   - name: touch /etc/ssh/ssh_known_hosts
     file:
       dest: /etc/ssh/ssh_known_hosts
       state: touch
 
-  - name: setup global known_hosts
+  - name: query the ssh_host ca certificate
+    shell: "curl https://vault.test.net:8200/v1/authority/ssh_host/public_key"
+    register: ssh_host_ca
+
+  - name: write the ssh_host ca certificate to file
     lineinfile:
       path: /etc/ssh/ssh_known_hosts
-      line: '@cert-authority * ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPhTMqNK5UADz2CqndLcf4X64ug2ERMD8VoWcruT7foI'
+      line: "@cert-authority * {{ ssh_host_ca.stdout }}"
 
   - name: touch /etc/ssh/ssh_config
     file:

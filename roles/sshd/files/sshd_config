@@ -1,11 +1,7 @@
 Port 22
 
-HostKey /etc/ssh/ssh_host_rsa_key
-HostCertificate /etc/ssh/ssh_host_rsa_key.cer
-HostKey /etc/ssh/ssh_host_ecdsa_key
-HostCertificate /etc/ssh/ssh_host_ecdsa_key.cer
-HostKey /etc/ssh/ssh_host_ed25519_key
-HostCertificate /etc/ssh/ssh_host_ed25519_key.cer
+HostKey /etc/ssh/ssh_host_key
+HostCertificate /etc/ssh/ssh_host_key.cer
 
 ## authentication
 ChallengeResponseAuthentication no
