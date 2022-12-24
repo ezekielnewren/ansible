@@ -39,6 +39,7 @@
 - block:
   - name: delete existing keys
     shell: "rm /etc/ssh/ssh_host_*"
+    failed_when: False
 
   - name: write out ssh_host_key
     shell: "jq -r .ssh.private_key /tmp/secret.json > /etc/ssh/ssh_host_key"
