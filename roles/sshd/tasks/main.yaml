@@ -39,6 +39,7 @@
 - block:
   - name: delete existing keys
     shell: "rm /etc/ssh/ssh_host_*"
+    failed_when: False
 
   - name: write out ssh_host_key
     shell: "jq -r .ssh.private_key /tmp/secret.json > /etc/ssh/ssh_host_key"
@@ -66,7 +67,7 @@
       state: touch
 
   - name: query the ssh_host ca certificate
-    shell: "curl https://vault.test.net:8200/v1/authority/ssh_host/public_key"
+    shell: "curl {{ lookup('ansible.builtin.env', 'VAULT_ADDR') }}/v1/authority/ssh_host/public_key"
     register: ssh_host_ca
 
   - name: write the ssh_host ca certificate to file
