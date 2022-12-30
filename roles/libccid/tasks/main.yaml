@@ -1,0 +1,26 @@
+- block:
+  - name: install libccid
+    package:
+      name:
+        - libccid
+
+  - name: copy Info.plist
+    copy:
+      src: "Info.plist"
+      dest: "/etc/libccid_Info.plist"
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: copy libccid.so
+    copy:
+      src: "libccid.so"
+      dest: "/usr/lib/pcsc/drivers/ifd-ccid.bundle/Contents/Linux/libccid.so"
+      owner: root
+      group: root
+      mode: '0644'
+
+  become: yes
+  become_user: root
+  tags:
+    - libccid
