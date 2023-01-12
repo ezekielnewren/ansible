@@ -1,0 +1,53 @@
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: false
+      dhcp6: false
+      match:
+        macaddress: "00:10:a7:e0:05:36"
+      set-name: eth0
+    eth1:
+      dhcp4: false
+      dhcp6: false
+      match:
+        macaddress: "00:10:a7:e0:05:37"
+      set-name: eth1
+    eth2:
+      dhcp4: false
+      dhcp6: false
+      match:
+        macaddress: "00:10:a7:e0:05:38"
+      set-name: eth2
+    eth3:
+      dhcp4: false
+      dhcp6: false
+      match:
+        macaddress: "00:10:a7:e0:05:39"
+      set-name: eth3
+    eth4:
+      dhcp4: false
+      dhcp6: false
+      match:
+        macaddress: "00:10:a7:e0:05:3a"
+      set-name: eth4
+    wan:
+      dhcp4: false
+      dhcp6: false
+      match:
+        macaddress: "00:10:a7:e0:05:3b"
+      set-name: wan
+  bridges:
+    br-lan:
+      dhcp4: true
+      dhcp6: true
+      macaddress: "00:10:a7:e0:05:36"
+      interfaces:
+        - eth0
+        - eth1
+        - eth2
+        - eth3
+        - eth4
+      parameters:
+        stp: true
+        forward-delay: 4
