@@ -1,0 +1,58 @@
+- block:
+  - name: install critical drivers
+    opkg:
+      name: "{{ item }}"
+    loop:
+      - kmod-ath9k
+      - wpad
+      - pcscd
+      - libopensc-pkcs11
+      - opensc-utils-pkcs11-tool
+
+  - name: install ansible
+    pip:
+      name:
+        - ansible
+        - ansible-modules-hashivault
+
+  - name: remove luci
+    opkg:
+      name: "{{ item }}"
+      state: absent
+    loop:
+      ## ORDER MATTERS!!!
+      - luci-ssl
+      - luci
+      - luci-app-firewall
+      - luci-app-opkg
+      - luci-mod-admin-full
+      - luci-mod-network
+      - luci-mod-status
+      - luci-mod-system
+      - luci-proto-ipv6
+      - luci-proto-ppp
+      - luci-theme-bootstrap
+      - luci-base
+      - luci-lib-base
+      - luci-lib-ip
+      - luci-lib-jsonc
+      - luci-lib-nixio
+
+  - name: remove dropbear
+    opkg:
+      name: dropbear
+      state: absent
+  
+  - name: install openssh-server
+    opkg:
+      name: openssh-server
+
+  - name: install nice to have packages
+    opkg:
+      name: "{{ item }}"
+    loop:
+      - nano
+      - usbutils
+      - pciutils
+      - jq
+
