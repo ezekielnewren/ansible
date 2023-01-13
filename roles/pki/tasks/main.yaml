@@ -1,0 +1,25 @@
+- block:
+  - name: install ca-certificates
+    package:
+      name: ca-certificates
+
+  - name: copy certificate authority files
+    copy:
+      src: "{{ item }}"
+      dest: "/etc/ssl/certs/{{ item }}"
+      owner: root
+      group: root
+      mode: '0644'
+    loop:
+      - vault_intermediate.pem
+      - vault_root.pem
+
+  ## it says changed everytime but the file never gets bigger
+  - name: add certificate authority files to ca-certificates.crt
+    blockinfile:
+      block: "{{ lookup('ansible.builtin.file', '{{ item }}') }}"
+      path: /etc/ssl/certs/ca-certificates.crt
+    loop:
+      - vault_intermediate.pem
+      - vault_root.pem
+
