@@ -1,9 +1,10 @@
 - block:
   - name: install curl, jq
     package:
-      name:
-        - curl
-        - jq
+      name: "{{ item }}"
+    loop:
+      - curl
+      - jq
 
   become: yes
   become_user: root
