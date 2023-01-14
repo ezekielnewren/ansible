@@ -1,0 +1,8 @@
+- block:
+  - name: install docker
+    opkg:
+      name: "{{ item }}"
+    loop:
+      - docker
+      - dockerd
+
