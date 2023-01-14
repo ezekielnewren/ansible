@@ -1,14 +1,63 @@
 - block:
-  - name: install critical drivers
-    opkg:
+  ## https://openwrt.org/docs/techref/driver.wlan/start
+  ## https://www.cyberciti.biz/faq/linux-find-wireless-driver-chipset/
+  ## sudo lshw -C network | grep -B 1 -A 12 'Wireless interface'
+  - name: wireless tools
+    package:
       name: "{{ item }}"
     loop:
-      - kmod-ath9k
+      ## ORDER MATTERS!!!
+      - wireless-tools
+      - iw-full
+      - iwinfo
       - wpad
+
+  - name: wireless drivers Atheros
+    package:
+      name: "{{ item }}"
+    loop:
+      - kmod-ath10k
+      - kmod-ath3k
+      - kmod-ath5k
+      - kmod-ath9k
+
+  - name: wireless drivers Ralink
+    package:
+      name: "{{ item }}"
+    loop:
+      - kmod-rt2400-pci
+      - kmod-rt2500-pci
+      - kmod-rt2500-usb
+      - kmod-rt2800-lib
+      - kmod-rt2800-mmio
+      - kmod-rt2800-pci
+      - kmod-rt2800-usb
+      - kmod-rt2x00-lib
+      - kmod-rt2x00-mmio
+      - kmod-rt2x00-pci
+      - kmod-rt2x00-usb
+      - kmod-rt61-pci
+      - kmod-rt73-usb
+
+  - name: wireless drivers b43
+    package:
+      name: "{{ item }}"
+    loop:
+      - kmod-b43
+      - kmod-b43legacy
+
+  - name: smart card drivers
+    package:
+      name: "{{ item }}"
+    loop:
       - pcscd
+      - ccid
       - libopensc-pkcs11
       - opensc-utils-pkcs11-tool
+      - p11-kit
+      - gnutls-utils
 
+- block:
   - name: install ansible
     pip:
       name:
@@ -51,8 +100,22 @@
     opkg:
       name: "{{ item }}"
     loop:
+      - jq
+      - git
+      - git-http
+      - file
       - nano
+      - nmap
+      - rsync
       - usbutils
       - pciutils
-      - jq
+
+- name: run other roles
+  include_role:
+    name: "{{ role_other }}"
+  loop:
+    - pki
+    - ssh
+  loop_control:
+    loop_var: role_other
 
