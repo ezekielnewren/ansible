@@ -11,8 +11,8 @@
       group: root
       mode: '0644'
     loop:
-      - vault_intermediate.pem
-      - vault_root.pem
+      - vault_intermediate.crt
+      - vault_root.crt
 
   ## it says changed everytime but the file never gets bigger
   - name: add certificate authority files to ca-certificates.crt
@@ -20,6 +20,6 @@
       block: "{{ lookup('ansible.builtin.file', '{{ item }}') }}"
       path: /etc/ssl/certs/ca-certificates.crt
     loop:
-      - vault_intermediate.pem
-      - vault_root.pem
+      - vault_intermediate.crt
+      - vault_root.crt
 
