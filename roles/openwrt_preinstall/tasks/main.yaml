@@ -1,16 +1,27 @@
 - block:
+  - name: cryptsetup
+    package:
+      name: cryptsetup
+
   ## https://openwrt.org/docs/techref/driver.wlan/start
   ## https://www.cyberciti.biz/faq/linux-find-wireless-driver-chipset/
   ## sudo lshw -C network | grep -B 1 -A 12 'Wireless interface'
-  - name: wireless tools
+  - name: network tools
     package:
       name: "{{ item }}"
     loop:
       ## ORDER MATTERS!!!
       - wireless-tools
       - iw-full
+      - ip-full
       - iwinfo
       - wpad
+
+  - name: driver tuntap
+    package:
+      name: "{{ item }}"
+    loop:
+      - kmod-tun
 
   - name: wireless drivers Atheros
     package:
@@ -46,16 +57,17 @@
       - kmod-b43
       - kmod-b43legacy
 
-  - name: smart card drivers
-    package:
-      name: "{{ item }}"
-    loop:
-      - pcscd
-      - ccid
-      - libopensc-pkcs11
-      - opensc-utils-pkcs11-tool
-      - p11-kit
-      - gnutls-utils
+## these DO work!, but compiling zekenet for openwrt is painful
+#  - name: smart card drivers
+#    package:
+#      name: "{{ item }}"
+#    loop:
+#      - pcscd
+#      - ccid
+#      - libopensc-pkcs11
+#      - opensc-utils-pkcs11-tool
+#      - p11-kit
+#      - gnutls-utils
 
 - block:
   - name: install ansible
@@ -65,7 +77,7 @@
         - ansible-modules-hashivault
 
   - name: remove luci
-    opkg:
+    package:
       name: "{{ item }}"
       state: absent
     loop:
@@ -88,27 +100,34 @@
       - luci-lib-nixio
 
   - name: remove dropbear
-    opkg:
+    package:
       name: dropbear
       state: absent
   
   - name: install openssh-server
-    opkg:
-      name: openssh-server
-
-  - name: install nice to have packages
-    opkg:
+    package:
       name: "{{ item }}"
     loop:
+      - openssh-server
+      - openssh-client
+
+  - name: install nice to have packages
+    package:
+      name: "{{ item }}"
+    loop:
+      - pv
       - jq
       - git
       - git-http
       - file
       - nano
       - nmap
+      - fdisk
+      - sgdisk
       - rsync
       - usbutils
       - pciutils
+      - iputils-ping
 
 - name: run other roles
   include_role:

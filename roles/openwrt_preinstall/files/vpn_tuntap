@@ -1,0 +1,17 @@
+#!/bin/sh /etc/rc.common
+
+START=19  ## because network is 20
+STOP=91   ## because network is 90
+
+
+start() {
+    ip tuntap add mode tap tap0
+    ip link set dev tap0 up
+}
+
+
+stop() {
+    ip link set dev tap0 down
+    ip link delete tap0
+}
+
