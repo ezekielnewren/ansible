@@ -39,16 +39,39 @@
 
 
 
-  - name: update and upgrade
-    apt:
-      update_cache: yes
-      upgrade: yes
+  #- name: update and upgrade
+  #  apt:
+  #    update_cache: yes
+  #    upgrade: yes
 
   #- name: add swtpm repo
   #  apt_repository:
   #    repo: ppa:thopiekar/swtpm
   #    update_cache: yes
   #    state: present
+
+  - name: install packages
+    package:
+      name:
+        - "@development-tools"
+        # - build-essential
+        - dnsmasq
+        - ebtables
+        - libguestfs-tools
+        - libvirt-client
+        - libvirt-daemon
+        - libvirt-devel
+        - libxml2-devel
+        - libxslt-devel
+        - qemu
+        - qemu-kvm
+        - ruby-devel
+        - swtpm
+        - virt-install
+        - zlib-devel
+      state: present
+    when:
+      - ansible_facts['distribution'] == "Fedora"
 
   - name: install packages
     package:
@@ -69,6 +92,8 @@
         - virtinst
         - zlib1g-dev
       state: present
+    when:
+      - ansible_facts['distribution'] == "Ubuntu"
 
 
   # sudo chgrp tss /var/lib/swtpm-localca
@@ -112,7 +137,7 @@
     args:
       executable: /bin/bash
     with_items:
-      - virsh net-define <(echo PG5ldHdvcms+CiAgICA8bmFtZT5ob3N0LWJyaWRnZTwvbmFtZT4KICAgIDxmb3J3YXJkIG1vZGU9ImJyaWRnZSIvPgogICAgPGJyaWRnZSBuYW1lPSJicjAiLz4KPC9uZXR3b3JrPg== | base64 -d)
+      - virsh net-define <(echo PG5ldHdvcms+CiAgICA8bmFtZT5ob3N0LWJyaWRnZTwvbmFtZT4KICAgIDxmb3J3YXJkIG1vZGU9ImJyaWRnZSIvPgogICAgPGJyaWRnZSBuYW1lPSJicjAiLz4KPC9uZXR3b3JrPg== | base64 -d) || true
       - virsh net-start host-bridge
       - virsh net-autostart host-bridge
       - virsh net-list | grep -q host-bridge
