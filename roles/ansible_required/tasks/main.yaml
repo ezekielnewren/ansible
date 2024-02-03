@@ -1,0 +1,15 @@
+- block:
+  - name: required variables
+    debug:
+      msg:
+        # - "nonrootuser: {{ nonrootuser }}"
+        - "ansible_distribution_release: {{ ansible_distribution_release }}"
+    tags: general
+
+  - name: install ansible-modules-hashivault
+    pip:
+      name: ansible-modules-hashivault
+
+  become: yes
+  become_user: root
+
