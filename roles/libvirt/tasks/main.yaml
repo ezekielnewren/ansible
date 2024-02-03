@@ -37,64 +37,18 @@
     ignore_errors: yes
     when: amd.stat.exists
 
-
-
-  #- name: update and upgrade
-  #  apt:
-  #    update_cache: yes
-  #    upgrade: yes
-
-  #- name: add swtpm repo
-  #  apt_repository:
-  #    repo: ppa:thopiekar/swtpm
-  #    update_cache: yes
-  #    state: present
-
   - name: install packages
     package:
       name:
-        - "@development-tools"
-        # - build-essential
-        - dnsmasq
-        - ebtables
-        - libguestfs-tools
-        - libvirt-client
-        - libvirt-daemon
-        - libvirt-devel
-        - libxml2-devel
-        - libxslt-devel
-        - qemu
-        - qemu-kvm
-        - ruby-devel
-        - swtpm
-        - virt-install
-        - zlib-devel
-      state: present
-    when:
-      - ansible_facts['distribution'] == "Fedora"
-
-  - name: install packages
-    package:
-      name:
-        - build-essential
-        - dnsmasq-base
-        - ebtables
-        - libguestfs-tools
-        - libvirt-clients
-        - libvirt-daemon-system
+        - g++
+        - make
+        - libvirt
         - libvirt-dev
-        - libxml2-dev
-        - libxslt-dev
-        - qemu
-        - qemu-kvm
-        - ruby-dev
-        - swtpm
-        - virtinst
-        - zlib1g-dev
+        - libvirt-qemu
+        - libvirt-daemon
+        - libvirt-daemon-openrc
+        - virt-install
       state: present
-    when:
-      - ansible_facts['distribution'] == "Ubuntu"
-
 
   # sudo chgrp tss /var/lib/swtpm-localca
   # sudo chmod g+rwxs /var/lib/swtpm-localca
@@ -122,7 +76,7 @@
     shell: sysctl -w net.ipv4.ip_forward=1
 
   - name: service libvirtd
-    systemd:
+    service:
       name: libvirtd
       enabled: yes
       state: started
