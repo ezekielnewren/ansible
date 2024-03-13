@@ -44,9 +44,15 @@
         - make
         - libvirt
         - libvirt-dev
+        - libvirt-doc
         - libvirt-qemu
         - libvirt-daemon
         - libvirt-daemon-openrc
+        - libvirt-bash-completion
+        - qemu-img
+        - qemu-system-x86_64
+        - qemu-modules
+        - polkit
         - virt-install
       state: present
 
@@ -57,7 +63,7 @@
     user:
       name: "{{ nonrootuser }}"
       state: present
-      groups: libvirt,kvm
+      groups: libvirt,kvm,qemu
       append: yes
 
   - name: enable virtiofs synced folder
@@ -81,6 +87,14 @@
       enabled: yes
       state: started
 
+  - name: copy host-bridge.xml
+    copy:
+      src: "host-bridge.xml"
+      dest: "/var/lib/libvirt/network/"
+      owner: root
+      group: root
+      mode: '0644'
+
   - name: is host-bridge defined
     shell: virsh net-list | grep -q host-bridge
     failed_when: false
@@ -91,11 +105,13 @@
     args:
       executable: /bin/bash
     with_items:
-      - virsh net-define <(echo PG5ldHdvcms+CiAgICA8bmFtZT5ob3N0LWJyaWRnZTwvbmFtZT4KICAgIDxmb3J3YXJkIG1vZGU9ImJyaWRnZSIvPgogICAgPGJyaWRnZSBuYW1lPSJicjAiLz4KPC9uZXR3b3JrPg== | base64 -d) || true
+      - virsh net-define /var/lib/libvirt/network/host-bridge.xml || true
       - virsh net-start host-bridge
       - virsh net-autostart host-bridge
       - virsh net-list | grep -q host-bridge
     when: result.rc != 0
+
+  
 
   become: yes
   become_user: root
