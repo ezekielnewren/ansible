@@ -1,33 +1,31 @@
 - block:
-  - set_fact:
-      password: "{{ lookup('file', '/tmp/password') }}"
-
-  - name: set root password
-    user:
-      name: "root"
-      password: "{{ password | password_hash('sha512') }}"
-
   - name: set hostname
-    shell: "echo {{ hostname }} > /etc/hostname"
+    shell: "echo {{ ansible_hostname }} > /etc/hostname"
 
   - name: make sure the ubuntu user doesn't exist
     user:
       name: "ubuntu"
       state: absent
 
+  - name: install sudo
+    package:
+      name: sudo
+      state: present
+
   - name: create nonrootuser
     user:
       name: "{{ nonrootuser }}"
       shell: /bin/bash
       password_lock: yes
-      groups: sudo
+      groups: wheel
       append: yes
+
 
   - name: allow the use of sudo without a password
     replace:
       path: "/etc/sudoers"
-      regexp: "^%sudo.*$"
-      replace: "%sudo   ALL=(ALL:ALL) NOPASSWD: ALL"
+      regexp: "^(# *)?%wheel.*$"
+      replace: "%wheel   ALL=(ALL:ALL) NOPASSWD: ALL"
 
 
   - name: hush login
@@ -37,7 +35,23 @@
       group: "{{ nonrootuser }}"
       state: touch
 
-  - name: bash aliases
+  - name: copy .profile
+    copy:
+      src: .profile
+      dest: /home/{{ nonrootuser }}/.profile
+      owner: "{{ nonrootuser }}"
+      group: "{{ nonrootuser }}"
+      mode: "0644"
+
+  - name: copy .bashrc
+    copy:
+      src: .bashrc
+      dest: /home/{{ nonrootuser }}/.bashrc
+      owner: "{{ nonrootuser }}"
+      group: "{{ nonrootuser }}"
+      mode: "0644"
+
+  - name: copy .bash_aliases
     copy:
       src: .bash_aliases
       dest: /home/{{ nonrootuser }}/.bash_aliases
@@ -45,32 +59,8 @@
       group: "{{ nonrootuser }}"
       mode: "0644"
 
-  - name: ensure that ufw is installed
-    package:
-      name: ufw
-      state: present
-
-  - name: enable firewall
-    ufw:
-      direction: incoming
-      policy: deny
-      state: enabled
-
-  - name: allow dhcp
-    shell: "{{ item }}"
-    with_items:
-      - "ufw allow bootps"
-      - "ufw allow 53/tcp"
-      - "ufw allow 53/udp"
-
-  - name: allow forwarding of all packets
-    replace:
-      path: /etc/default/ufw
-      regexp: 'DEFAULT_FORWARD_POLICY="DROP"'
-      replace: 'DEFAULT_FORWARD_POLICY="ACCEPT"'
-
-  - set_fact:
-      sshuser: "{{ nonrootuser }}"
+  #- set_fact:
+  #    sshuser: "{{ nonrootuser }}"
 
   - name: run other roles
     include_role:
@@ -78,7 +68,7 @@
     loop:
       - ssh
       - sshd
-      - netplan
+      # - netplan
     loop_control:
       loop_var: role_other
 

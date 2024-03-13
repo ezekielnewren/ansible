@@ -14,7 +14,7 @@
   - name: required variables
     debug:
       msg:
-        - "hostname: {{ hostname }}"
+        - "ansible_hostname: {{ ansible_hostname }}"
 
   - name: stat /tmp/secret.json
     stat:
@@ -23,7 +23,7 @@
 
   - name: lookup secrets directly
     set_fact:
-      SSHD_KEYS: "{{ lookup('hashivault', '{{ hostname }}', mount_point='/kv/machine', version=2) }}"
+      SSHD_KEYS: "{{ lookup('hashivault', '{{ ansible_hostname }}', mount_point='/kv/machine', version=2) }}"
     when: secret.stat.exists == False
 
   - name: copy secrets to guest
@@ -37,6 +37,14 @@
     - sshd
 
 - block:
+  - name: install sshd
+    package:
+      name:
+        - openssh-server
+        - openssh-sftp-server
+        - openssh-server-pam
+      state: present
+
   - name: delete existing keys
     shell: "rm /etc/ssh/ssh_host_*"
     failed_when: False
