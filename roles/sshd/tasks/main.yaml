@@ -41,8 +41,8 @@
     package:
       name:
         - openssh-server
-        - openssh-sftp-server
-        - openssh-server-pam
+        # - openssh-sftp-server
+        # - openssh-server-pam
       state: present
 
   - name: delete existing keys

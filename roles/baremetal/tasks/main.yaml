@@ -1,6 +1,6 @@
 - block:
   - name: set hostname
-    shell: "echo {{ ansible_hostname }} > /etc/hostname"
+    shell: "echo {{ hostname }} > /etc/hostname"
 
   - name: make sure the ubuntu user doesn't exist
     user:
@@ -66,6 +66,7 @@
     include_role:
       name: "{{ role_other }}"
     loop:
+      - pki
       - ssh
       - sshd
       # - netplan

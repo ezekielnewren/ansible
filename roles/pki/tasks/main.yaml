@@ -7,13 +7,13 @@
   - name: copy EzekielNewrenRoot.pem
     copy:
       src: "EzekielNewrenRoot.pem"
-      dest: "/etc/ssl/certs"
+      dest: "/etc/pki/ca-trust/source/anchors/"
       owner: root
       group: root
       mode: '0444'
   
-  - name: update-ca-certificates
-    shell: "update-ca-certificates"
+  - name: update-ca-trust
+    shell: "update-ca-trust"
     
   become: yes
   become_user: root
