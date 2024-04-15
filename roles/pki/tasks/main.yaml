@@ -1,0 +1,22 @@
+- block:
+  - name: required variables
+    debug:
+      msg:
+        - "ansible_hostname: {{ ansible_hostname }}"
+  
+  - name: copy EzekielNewrenRoot.pem
+    copy:
+      src: "EzekielNewrenRoot.pem"
+      dest: "/etc/ssl/certs"
+      owner: root
+      group: root
+      mode: '0444'
+  
+  - name: update-ca-certificates
+    shell: "update-ca-certificates"
+    
+  become: yes
+  become_user: root
+  tags:
+    - pki
+
