@@ -16,22 +16,9 @@
       msg:
         - "ansible_hostname: {{ ansible_hostname }}"
 
-  - name: stat /tmp/secret.json
-    stat:
-      path: /tmp/secret.json
-    register: secret
-
   - name: lookup secrets directly
     set_fact:
-      SSHD_KEYS: "{{ lookup('hashivault', '{{ ansible_hostname }}', mount_point='/kv/machine', version=2) }}"
-    when: secret.stat.exists == False
-
-  - name: copy secrets to guest
-    copy: content="{{ SSHD_KEYS }}" dest=/tmp/secret.json
-    when: secret.stat.exists == False
-
-  - name: check that /tmp/secret.json actually contains secrets
-    command: grep "ssh" /tmp/secret.json
+      MACHINE_SECRET: "{{ lookup('hashivault', '{{ ansible_hostname }}', mount_point='/kv/machine', version=2) }}"
 
   tags:
     - sshd
@@ -50,21 +37,17 @@
     failed_when: False
 
   - name: write out ssh_host_key
-    shell: "jq -r .ssh.private_key /tmp/secret.json > /etc/ssh/ssh_host_key"
-
-  - name: set ssh_host_key permissions
-    file:
-      path: /etc/ssh/ssh_host_key
+    copy:
+      content: "{{ MACHINE_SECRET['ssh']['private_key'] }}"
+      dest: /etc/ssh/ssh_host_key
       owner: root
       group: root
       mode: '0600'
 
   - name: write out ssh_host_key.cer
-    shell: "jq -r .ssh.certificate /tmp/secret.json > /etc/ssh/ssh_host_key.cer"
-
-  - name: set ssh_host_key.cer permissions
-    file:
-      path: /etc/ssh/ssh_host_key.cer
+    copy:
+      content: "{{ MACHINE_SECRET['ssh']['certificate'] }}"
+      dest: /etc/ssh/ssh_host_key.cer
       owner: root
       group: root
       mode: '0644'

@@ -19,5 +19,5 @@ PermitTTY yes
 PrintMotd no
 TCPKeepAlive yes
 
-Subsystem	sftp	/usr/lib/ssh/sftp-server -l INFO
+Subsystem	sftp	/usr/libexec/openssh/sftp-server -l INFO
 
