@@ -52,6 +52,8 @@
         - qemu-img
         - qemu-system-x86_64
         - qemu-modules
+        - swtpm
+        - swtpm-doc
         - polkit
         - virt-install
       state: present
