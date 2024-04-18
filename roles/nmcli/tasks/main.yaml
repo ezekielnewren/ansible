@@ -1,51 +1,71 @@
-- name: create interface dictionary
-  set_fact:
-    IFACE: "{{ IFACE|default({}) | combine( { ansible_facts[item]['macaddress']|default(None): item } ) }}"
-  with_items: "{{ ansible_interfaces }}"
-
-- name: find ethmain
-  set_fact:
-    ETHMAIN: "{{ IFACE[macaddress] }}"
-
 - block:
-  - name: get connection name of ethmain
-    shell: "nmcli -t -f NAME,DEVICE c show --active | grep :{{ ETHMAIN }}$ | cut -d: -f1"
-    register: result_ethmain
+  - name: lookup secrets directly
+    set_fact:
+      MACHINE_SECRET: "{{ lookup('hashivault', '{{ ansible_hostname }}', mount_point='/kv/machine', version=2) }}"
+  
+  - set_fact:
+      NETWORK: "{{ MACHINE_SECRET['network'] }}"
 
-  - name: rename connection containing ethmain
-    shell: "nmcli connection modify '{{ result_ethmain.stdout_lines[0] }}' connection.id ethmain"
+  - set_fact:
+      mac_addresses: "{{ mac_addresses | default([]) + item.macaddress }}"
+    loop: "{{ NETWORK.values() | list }}"
+    when: item.macaddress is defined
 
-  - name: install bridge-utils
-    package:
-      name:
-        - bridge-utils
-        - NetworkManager-libnm
-        - nm-connection-editor
+  - name: setup udev rules to make interface names based on mac addresses
+    template:
+      src: 10-eth-mac.rules
+      dest: /etc/udev/rules.d/10-eth-mac.rules
+      owner: root
+      group: root
+      mode: '0644'
 
-  - name: "ensure ethmain connection exists"
+  - name: create bridge br-fast
     nmcli:
-      conn_name: "ethmain"
-      type: "ethernet"
-      ifname: "{{ ETHMAIN }}"
+      type: bridge
+      conn_name: br-fast
+      ifname: br-fast
+      stp: true
+      ip4: "{{ NETWORK['br-fast']['ipv4'] }}"
       state: present
 
-  - name: "create bridge interface and connection"
+  - name: add interfaces to br-fast
     nmcli:
-      conn_name: "br0"
-      type: "bridge"
-      ifname: "br0"
-      mac: "{{ ansible_facts[ETHMAIN]['macaddress'] }}"
-      method4: "auto"
-      autoconnect: true
+      type: ethernet
+      conn_name: "br-fast-{{ item | replace(':', '') }}"
+      ifname: "e{{ item | replace(':', '')}}"
+      master: "br-fast"
+      slave_type: bridge
+      state: present
+    loop: "{{ NETWORK['br-fast']['macaddress'] }}"
+
+  - name: create bridge br-mgmt
+    nmcli:
+      type: bridge
+      conn_name: br-mgmt
+      ifname: br-mgmt
+      stp: true
+      # ip4: "{{ NETWORK['br-mgmt']['ipv4'] }}"
+      method4: auto
       state: present
 
-  - name: "add bridge-slave"
+  - name: add interfaces to br-mgmt
     nmcli:
-      conn_name: "ethmain"
-      type: "bridge-slave"
-      master: "br0"
-      ifname: "{{ ETHMAIN }}"
+      type: ethernet
+      conn_name: "br-mgmt-{{ item | replace(':', '') }}"
+      ifname: "e{{ item | replace(':', '')}}"
+      master: "br-mgmt"
+      slave_type: bridge
       state: present
+    loop: "{{ NETWORK['br-mgmt']['macaddress'] }}"
 
   become: yes
   become_user: root
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,5 @@
+# udev_rules.j2
+# interface names are limited to a maximum of 15 characters
+{% for mac in mac_addresses %}
+SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="{{ mac }}", NAME="e{{ mac | replace(':', '') }}"
+{% endfor %}
