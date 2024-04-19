@@ -2,39 +2,37 @@
   package:
     name:
       - jq
-      - tpm2-abrmd
-      - tpm2-tools
-      - clevis
-      - clevis-tpm2
-      - clevis-luks
-      - clevis-initramfs
-      - clevis-udisks2
-      - clevis-systemd
   become: yes
   become_user: root
 
 - name: read secrets from vault
   set_fact:
-    SECRET: "{{ lookup('hashivault', '{{ inventory_hostname }}', mount_point='/service/machine', version=2) }}"
+    SECRET: "{{ lookup('hashivault', '{{ inventory_hostname }}', mount_point='/kv/machine', version=2) }}"
+
+- name: Combine all device information into a single list
+  set_fact:
+    DRIVE: "{{ ([SECRET['fde'].boot] + SECRET['fde'].nvme + SECRET['fde'].ssd + SECRET['fde'].hdd) }}"
+  no_log: true
 
 - name: add the path to the machine secrets dictionary
   set_fact:
-    SECRET: "{{ SECRET | combine({'fde': { item.key: {'path': '/dev/disk/by-id/'+item.value['bus']+'-'+item.key}}}, recursive=true) }}"
-  with_dict: "{{ SECRET['fde'] }}"
+    DRIVE: "{{ DRIVE | map('combine', {'path': '/dev/disk/by-id/' ~ item.bus ~ '-' ~ item.mnsn}) | list }}"
+  loop: "{{ DRIVE }}"
   no_log: true
 
 - name: stat all block devices
   stat:
-    path: "{{ item.value['path'] }}"
-  with_dict: "{{ SECRET['fde'] }}"
+    path: "{{ item['path'] }}"
+    follow: yes
+  loop: "{{ DRIVE }}"
   no_log: true
   register: stat_result
 
 - name: add stat result to secrets dictionary
   set_fact:
-    SECRET: "{{ SECRET | combine({'fde': { item['item']['key']: {'stat': item['stat']}}}, recursive=true) }}"
+    DRIVE: "{{ DRIVE | combine({'stat': item['stat']}) }}"
   with_items: "{{ stat_result.results }}"
   no_log: true
 
-- include: fde.yaml
-- include: lvm.yaml
+#- include: fde.yaml
+#- include: lvm.yaml
