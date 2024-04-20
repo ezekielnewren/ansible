@@ -1,30 +1,21 @@
 - block:
-  - name: create luks container
-    luks_device:
-      type: "luks2"
-      device: "{{ item.value['path'] }}"
-      name: "{{ item.key }}"
-      label: "{{ item.key }}"
-      state: "opened"
-      passphrase: "{{ item.value['password'] }}"
-    with_dict: "{{ SECRET['fde'] }}"
-
-  - name: kill slot 1 on all devices
-    shell: "echo -n {{ item.value['password'] }} | cryptsetup luksKillSlot {{ item.value['path'] }} 1"
-    with_dict: "{{ SECRET['fde'] }}"
-    register: result_killslot
+  - name: Enroll password
+    ansible.builtin.expect:
+      command: systemd-cryptenroll --wipe-slot=1 --tpm2-device=auto {{ item['path'] }}
+      responses:
+        (?i).*Please enter current passphrase for disk.*: "{{ item['password'] }}\n"
+      timeout: 5
+      echo: yes
+    register: result
+    loop: "{{ DRIVE[1:] }}"
+    no_log: no
     failed_when: false
-    changed_when: result_killslot.rc == 0
 
-  - name: run clevis luks bind on all drives for slot 1 unconditionally
-    shell: "echo -n '{{ item.value['password'] }}' | clevis luks bind -s 1 -k - -d {{ item.value['path'] }} tpm2 '{}'"
-    with_dict: "{{ SECRET['fde'] }}"
-
-  - name: add drive to /etc/crypttab
-    lineinfile:
-      path: "/etc/crypttab"
-      line: "{{ item.key }} {{ item.value['path'] }} none luks"
-    with_dict: "{{ SECRET['fde'] }}"
+  - name: update /etc/crypttab
+    ansible.builtin.lineinfile:
+      path: /etc/crypttab
+      line: "{{ item['mnsn'] }} {{ item['path'] }} none tpm2-device=auto,discard,nofail"
+    loop: "{{ DRIVE[1:] }}"
 
   become: yes
   become_user: root

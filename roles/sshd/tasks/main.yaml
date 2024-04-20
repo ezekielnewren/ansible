@@ -14,11 +14,11 @@
   - name: required variables
     debug:
       msg:
-        - "ansible_hostname: {{ ansible_hostname }}"
+        - "inventory_hostname: {{ inventory_hostname }}"
 
   - name: lookup secrets directly
     set_fact:
-      MACHINE_SECRET: "{{ lookup('hashivault', '{{ ansible_hostname }}', mount_point='/kv/machine', version=2) }}"
+      MACHINE_SECRET: "{{ lookup('hashivault', '{{ inventory_hostname }}', mount_point='/kv/machine', version=2) }}"
 
   tags:
     - sshd

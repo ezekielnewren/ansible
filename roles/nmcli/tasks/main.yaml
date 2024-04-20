@@ -1,7 +1,7 @@
 - block:
   - name: lookup secrets directly
     set_fact:
-      MACHINE_SECRET: "{{ lookup('hashivault', '{{ ansible_hostname }}', mount_point='/kv/machine', version=2) }}"
+      MACHINE_SECRET: "{{ lookup('hashivault', '{{ inventory_hostname }}', mount_point='/kv/machine', version=2) }}"
   
   - set_fact:
       NETWORK: "{{ MACHINE_SECRET['network'] }}"

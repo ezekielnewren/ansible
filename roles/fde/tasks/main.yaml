@@ -2,6 +2,7 @@
   package:
     name:
       - jq
+      - tpm2-tools
   become: yes
   become_user: root
 
@@ -14,11 +15,16 @@
     DRIVE: "{{ ([SECRET['fde'].boot] + SECRET['fde'].nvme + SECRET['fde'].ssd + SECRET['fde'].hdd) }}"
   no_log: true
 
-- name: add the path to the machine secrets dictionary
-  set_fact:
-    DRIVE: "{{ DRIVE | map('combine', {'path': '/dev/disk/by-id/' ~ item.bus ~ '-' ~ item.mnsn}) | list }}"
+- set_fact:
+    new_DRIVE: "{{ new_DRIVE | default([]) + [item | combine({'path': '/dev/disk/by-id/' ~ item['bus'] ~ '-' ~ item['mnsn']})] }}"
   loop: "{{ DRIVE }}"
-  no_log: true
+
+- set_fact:
+    DRIVE: "{{ new_DRIVE }}"
+
+#- debug:
+#    msg:
+#      - "{{ DRIVE }}"
 
 - name: stat all block devices
   stat:
@@ -28,11 +34,13 @@
   no_log: true
   register: stat_result
 
-- name: add stat result to secrets dictionary
-  set_fact:
-    DRIVE: "{{ DRIVE | combine({'stat': item['stat']}) }}"
-  with_items: "{{ stat_result.results }}"
-  no_log: true
+#- name: add stat result to secrets dictionary
+#  set_fact:
+#    DRIVE: "{{ DRIVE | combine({'stat': item['stat']}) }}"
+#  with_items: "{{ stat_result.results }}"
+#  no_log: true
 
-#- include: fde.yaml
+
+- include_tasks: fde.yaml
 #- include: lvm.yaml
+
