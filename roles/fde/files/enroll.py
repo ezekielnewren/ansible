@@ -24,7 +24,7 @@ def luksTestPassword(path, password):
     if isinstance(password, str):
         password = password.encode("utf-8")
 
-    cmd=f"cryptsetup luksOpen --test-passphrase --tries 1 --key-slot 0 {path}"
+    cmd=f"cryptsetup luksOpen --disable-external-tokens --test-passphrase --tries 1 --key-slot 0 {path}"
     child = pexpect.spawn(cmd)
 
     child.expect(f"^Enter passphrase for {path}: ")
