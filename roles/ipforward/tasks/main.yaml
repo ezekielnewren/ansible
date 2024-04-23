@@ -1,0 +1,13 @@
+- block:
+  - name: enable ipv4 forwarding
+    lineinfile:
+      dest: /etc/sysctl.conf
+      regexp: '^#\s*net.ipv4.ip_forward=1.*$'
+      line: 'net.ipv4.ip_forward=1'
+
+  - name: enable ipv4 forwarding now
+    shell: sysctl -w net.ipv4.ip_forward=1
+
+  become: yes
+  become_user: root
+

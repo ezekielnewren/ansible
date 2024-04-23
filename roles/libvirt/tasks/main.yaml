@@ -74,14 +74,8 @@
       regexp: '^#\s*memory_backing_dir'
       replace: 'memory_backing_dir'
 
-  - name: enable ipv4 forwarding
-    lineinfile:
-      dest: /etc/sysctl.conf
-      regexp: '^#\s*net.ipv4.ip_forward=1.*$'
-      line: 'net.ipv4.ip_forward=1'
-
-  - name: enable ipv4 forwarding now
-    shell: sysctl -w net.ipv4.ip_forward=1
+  - include_role:
+      name: ipforward
 
   - name: service libvirtd
     service:
@@ -113,7 +107,6 @@
       - virsh net-list | grep -q host-bridge
     when: result.rc != 0
 
-  
 
   become: yes
   become_user: root
