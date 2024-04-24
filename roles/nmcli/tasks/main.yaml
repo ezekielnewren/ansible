@@ -24,6 +24,7 @@
       type: bridge
       conn_name: br-fast
       ifname: br-fast
+      mtu: 9080
       stp: true
       ip4: "{{ NETWORK['br-fast']['ipv4'] }}"
       state: present
@@ -33,6 +34,7 @@
       type: ethernet
       conn_name: "br-fast-{{ item | replace(':', '') }}"
       ifname: "e{{ item | replace(':', '')}}"
+      mtu: 9080
       master: "br-fast"
       slave_type: bridge
       state: present
@@ -43,6 +45,7 @@
       type: bridge
       conn_name: br-mgmt
       ifname: br-mgmt
+      mtu: 1500
       stp: true
       # ip4: "{{ NETWORK['br-mgmt']['ipv4'] }}"
       method4: auto
@@ -53,6 +56,7 @@
       type: ethernet
       conn_name: "br-mgmt-{{ item | replace(':', '') }}"
       ifname: "e{{ item | replace(':', '')}}"
+      mtu: 1500
       master: "br-mgmt"
       slave_type: bridge
       state: present
