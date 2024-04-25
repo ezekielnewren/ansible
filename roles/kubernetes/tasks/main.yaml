@@ -1,0 +1,121 @@
+- block:
+  - name: required variables
+    debug:
+      msg:
+        - "ansible_distribution_release: {{ ansible_distribution_release }}"
+
+  - include_role:
+      name: ipforward
+
+  - name: disable selinux in the config file
+    lineinfile:
+      path: /etc/selinux/config
+      regexp: '^SELINUX=enforcing$'
+      line: 'SELINUX=permissive'
+
+  - name: disable selinux right now
+    shell: setenforce 0
+
+  - name: copy network manager file
+    copy:
+      src: calico.conf
+      dest: "/etc/NetworkManager/conf.d/"
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: copy kubernetes.repo, crio.repo
+    copy:
+      src: "{{ item }}"
+      dest: "/etc/yum.repos.d/"
+      owner: root
+      group: root
+      mode: '0644'
+    loop:
+      - kubernetes.repo
+      - crio.repo
+
+  - name: install container runtime
+    package:
+      name:
+        - cri-o
+        - docker
+        - keepalived
+        - nmap  # nc for keepalived health check
+
+  - name: install kubernetes
+    package:
+      name:
+        - kubeadm
+        - kubectl
+        - kubelet
+      state: present
+
+  - name: enable and start kubelet, crio
+    systemd:
+      name: "{{ item }}"
+      enabled: true
+      state: started
+    loop:
+      - kubelet
+      - crio
+
+  - name: open ports in the firewall
+    firewalld:
+      port: "{{ item }}"
+      permanent: true
+      state: enabled
+      immediate: true
+    loop:
+      - "6443/tcp"
+      - "2379-2380/tcp"
+      - "10250-10251/tcp"
+      - "10257/tcp"
+      - "10259/tcp"
+      - "179/tcp"
+      - "4789/udp"
+      - "7946/tcp"  # metallb
+      - "7946/udp"  # metallb
+      - "443/tcp"
+      - "80/tcp"
+      
+  - name: firewall allow VRRP
+    firewalld:
+      state: enabled
+      immediate: yes
+      permanent: yes
+      rich_rule: 'rule protocol value="vrrp" accept'
+
+  - name: firewall allow multicast traffic for VRRP
+    firewalld:
+      state: enabled
+      immediate: yes
+      permanent: yes
+      rich_rule: 'rule family="ipv4" source address="224.0.0.18/32" accept'
+
+  - name: firewall reload
+    systemd:
+      name: firewalld
+      state: reloaded
+
+  - name: generate random password for keepalived
+    set_fact:
+      KEEPALIVED_PASSWORD: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_lowercase', 'ascii_uppercase', 'ascii_digits'], length=22) }}"
+    run_once: true
+    delegate_to: localhost
+
+  - name: copy keepalived.conf
+    template:
+      src: keepalived.conf
+      dest: /etc/keepalived/keepalived.conf
+
+  - name: restart keepalived
+    systemd:
+      name: keepalived
+      state: reloaded
+
+  become: yes
+  become_user: root
+  tags:
+    - kubernetes
+
