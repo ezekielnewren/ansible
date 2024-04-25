@@ -1,24 +1,16 @@
 - block:
-  - name: Enroll password
-    ansible.builtin.expect:
-      command: systemd-cryptenroll --wipe-slot=1 --tpm2-device=auto {{ item['path'] }}
-      responses:
-        (?i).*Please enter current passphrase for disk.*: "{{ item['password'] }}\n"
-      timeout: 5
-      echo: yes
-    register: result
-    loop: "{{ DRIVE[1:] }}"
-    no_log: no
-    failed_when: false
-
   - name: update /etc/crypttab
     ansible.builtin.lineinfile:
       path: /etc/crypttab
       line: "{{ item['mnsn'] }} {{ item['path'] }} none tpm2-device=auto,discard,nofail"
     loop: "{{ DRIVE[1:] }}"
 
+#  sudo systemctl list-units | grep systemd-cryptsetup
+#  sudo systemctl daemon-reload
+
   become: yes
   become_user: root
   no_log: true
   tags:
     - fde
+
