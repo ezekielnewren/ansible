@@ -67,6 +67,11 @@
   #- set_fact:
   #    sshuser: "{{ nonrootuser }}"
 
+  - name: enabled crb repo
+    shell: dnf config-manager --set-enabled crb
+    when:
+      - ansible_facts['distribution'] == "Rocky"
+
   - name: run other roles
     include_role:
       name: "{{ role_other }}"

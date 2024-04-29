@@ -40,23 +40,24 @@
   - name: install packages
     package:
       name:
-        - g++
-        - make
-        - libvirt
-        - libvirt-dev
-        - libvirt-doc
-        - libvirt-qemu
+        - "@development"
+        - dnsmasq
+        - ebtables
+        - libguestfs-tools
+        - libvirt-client
         - libvirt-daemon
-        - libvirt-daemon-openrc
-        - libvirt-bash-completion
+        - libvirt-devel
+        - libxml2-devel
+        - libxslt-devel
         - qemu-img
-        - qemu-system-x86_64
-        - qemu-modules
+        - qemu-kvm
+        - ruby-devel
         - swtpm
-        - swtpm-doc
-        - polkit
         - virt-install
+        - zlib-devel
       state: present
+    when:
+      - ansible_facts['distribution'] == "Rocky"
 
   # sudo chgrp tss /var/lib/swtpm-localca
   # sudo chmod g+rwxs /var/lib/swtpm-localca
@@ -78,10 +79,19 @@
       name: ipforward
 
   - name: service libvirtd
-    service:
+    systemd:
       name: libvirtd
       enabled: yes
       state: started
+
+  - name: 
+    file:
+      path: /var/lib/libvirt/images
+      state: directory
+      owner: root
+      group: libvirt
+      mode: 'g+rwxs'
+      recurse: yes
 
   - name: copy host-bridge.xml
     copy:
