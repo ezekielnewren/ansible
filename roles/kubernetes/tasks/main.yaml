@@ -43,6 +43,20 @@
         - keepalived
         - nmap  # nc for keepalived health check
 
+  - name: find container image alias files
+    find:
+      paths: /etc/containers/registries.conf.d
+      patterns: "[0-9]{3}-.*$"
+      use_regex: yes
+    register: file_match
+
+  - name: remove container image aliases
+    file:
+      path: "{{ item.path }}"
+      state: absent
+    loop: "{{ file_match.files }}"
+    when: file_match.matched > 0
+
   - name: install kubernetes
     package:
       name:
