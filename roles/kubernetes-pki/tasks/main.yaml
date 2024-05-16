@@ -90,6 +90,45 @@
       - etcd/healthcheck-client
       - front-proxy-client
 
+  - name: copy node cert
+    copy:
+      content: "{{ '\n'.join(K8S_SECRET['pki']['control-plane']['node'][inventory_hostname]['etcd/peer']['chain'])+'\n' }}"
+      dest: /etc/kubernetes/pki/etcd/peer.crt
+      owner: "{{ nonrootuser }}"
+      group: "{{ nonrootuser }}"
+      mode: "0644"
+      
+  - name: copy node key
+    copy:
+      content: "{{ K8S_SECRET['pki']['control-plane']['node'][inventory_hostname]['etcd/peer']['private_key'] }}"
+      dest: /etc/kubernetes/pki/etcd/peer.key
+      owner: "{{ nonrootuser }}"
+      group: "{{ nonrootuser }}"
+      mode: "0644"
+
+  - name: symlink server to peer
+    file:
+      src: "peer.{{ item }}"
+      dest: "/etc/kubernetes/pki/etcd/server.{{ item }}"
+      state: link
+    loop:
+      - crt
+      - key
+
+  - name: copy conf files
+    template:
+      src: "{{ item }}.conf"
+      dest: /etc/kubernetes/{{ item }}.conf
+      owner: "root"
+      group: "root"
+      mode: "0600"
+    loop:
+      - admin
+      - controller-manager
+      - kubelet
+      - scheduler
+      - super-admin
+
   become: yes
   become_user: root
   tags:
