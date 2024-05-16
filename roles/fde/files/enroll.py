@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 
+# sudo dnf update -y
+# sudo dnf install -y tpm2-tools python3-pip
+# sudo pip install pexpect
+# sudo cat secret.json | ./enroll.py
+## replace dicard with tpm2-device=auto,discard in /etc/crypttab
+# sudo dracut -f
+# sudo grub2-mkconfig -o /boot/efi/EFI/rocky/grub.cfg
+# sudo systemctl daemon-reload
+# systemctl list-units | grep cryptsetup
+
 import sys
 import json
 import pexpect
@@ -112,6 +122,9 @@ def main():
 
     NEED_ENROLL = []
     for v in DRIVE:
+        if v['dump'] is None:
+            print("luksDump failed for", v['path'])
+            continue
         if v['dump']["keyslots"].get("1") is None and len(v['dump']['tokens']) == 0:
             path = v['path']
             if path.is_symlink():
