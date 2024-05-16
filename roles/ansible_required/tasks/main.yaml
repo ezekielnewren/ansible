@@ -6,9 +6,12 @@
         - "ansible_distribution_release: {{ ansible_distribution_release }}"
     tags: general
 
-  - name: install ansible-modules-hashivault
+  - name: install pip modules
     pip:
-      name: ansible-modules-hashivault
+      name:
+        - ansible-modules-hashivault
+        - dnspython
+      
 
   become: yes
   become_user: root
