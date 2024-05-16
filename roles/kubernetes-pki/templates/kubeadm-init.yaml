@@ -1,8 +1,14 @@
-# sudo kubeadm init --config=/tmp/kubeadm-init.yaml --node-name `hostname`.{{ SLD }}
+# sudo kubeadm init --config=/tmp/kubeadm-init.yaml && rm /tmp/kubeadm-init.yaml /tmp/kubeadm-join.yaml
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: InitConfiguration
 skipPhases:
   - certs
+nodeRegistration:
+  name: "{{ inventory_hostname }}.{{ SLD }}"
+  kubeletExtraArgs:
+    node-ip: "{{ IP }}"
+  ignorePreflightErrors:
+    - FileAvailable--etc-kubernetes-kubelet.conf
 ---
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
