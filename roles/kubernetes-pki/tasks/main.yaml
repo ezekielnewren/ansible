@@ -93,7 +93,7 @@
       - ["pub", "public_key"]
       - ["key", "private_key"]
 
-  - name: copy node cert
+  - name: copy node peer cert
     copy:
       content: "{{ '\n'.join(K8S_SECRET['pki']['control-plane']['node'][inventory_hostname]['etcd/peer']['chain'])+'\n' }}"
       dest: /etc/kubernetes/pki/etcd/peer.crt
@@ -101,7 +101,7 @@
       group: "{{ nonrootuser }}"
       mode: "0644"
       
-  - name: copy node key
+  - name: copy node peer key
     copy:
       content: "{{ K8S_SECRET['pki']['control-plane']['node'][inventory_hostname]['etcd/peer']['private_key'] }}"
       dest: /etc/kubernetes/pki/etcd/peer.key
@@ -118,6 +118,22 @@
       - crt
       - key
 
+  - name: copy node kubelet-server cert
+    copy:
+      content: "{{ '\n'.join(K8S_SECRET['pki']['control-plane']['node'][inventory_hostname]['kubelet-server']['chain'])+'\n' }}"
+      dest: /etc/kubernetes/pki/kubelet-server.crt
+      owner: "{{ nonrootuser }}"
+      group: "{{ nonrootuser }}"
+      mode: "0644"
+      
+  - name: copy node kubelet-server key
+    copy:
+      content: "{{ K8S_SECRET['pki']['control-plane']['node'][inventory_hostname]['kubelet-server']['private_key'] }}"
+      dest: /etc/kubernetes/pki/kubelet-server.key
+      owner: "{{ nonrootuser }}"
+      group: "{{ nonrootuser }}"
+      mode: "0644"
+
   - name: copy conf files
     template:
       src: "{{ item }}.conf"
@@ -131,6 +147,14 @@
       - kubelet
       - scheduler
       - super-admin
+
+  - name: copy init and join config files
+    template:
+      src: "{{ item }}"
+      dest: "/tmp/{{ item }}"
+    loop:
+      - kubeadm-init.yaml
+      - kubeadm-join.yaml
 
   become: yes
   become_user: root

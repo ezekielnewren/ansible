@@ -1,0 +1,17 @@
+# read -sp "token: " token; echo; read -sp "hash: " hash
+# sudo kubeadm join --config=/tmp/kubeadm-join.yaml --node-name `hostname`.{{ SLD }} --token $token --discovery-token-ca-cert-hash sha256:$hash
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: JoinConfiguration
+discovery:
+  bootstrapToken:
+    apiServerEndpoint: "{{ K8S_SECRET['topology']['endpoint'] }}.{{ SLD }}:6443"
+controlPlane:
+  localAPIEndpoint:
+    advertiseAddress: "{{ IP }}"
+    bindPort: 6443
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+tlsCertFile: /etc/kubernetes/pki/kubelet-server.crt
+tlsPrivateKeyFile: /etc/kubernetes/pki/kubelet-server.key
+
