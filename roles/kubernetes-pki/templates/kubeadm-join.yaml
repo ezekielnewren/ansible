@@ -1,14 +1,24 @@
 # read -sp "token: " token; echo; read -sp "hash: " hash
-# sudo kubeadm join --config=/tmp/kubeadm-join.yaml --node-name `hostname`.{{ SLD }} --token $token --discovery-token-ca-cert-hash sha256:$hash
+# sed -i -e "s/TOKEN/$token/g" -e "s/HASH/$hash/g" /tmp/kubeadm-join.yaml
+# sudo kubeadm join --config=/tmp/kubeadm-join.yaml
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: JoinConfiguration
 discovery:
   bootstrapToken:
     apiServerEndpoint: "{{ K8S_SECRET['topology']['endpoint'] }}.{{ SLD }}:6443"
+    token: TOKEN
+    caCertHashes:
+      - "sha256:HASH"
 controlPlane:
   localAPIEndpoint:
     advertiseAddress: "{{ IP }}"
     bindPort: 6443
+nodeRegistration:
+  name: "{{ inventory_hostname }}.{{ SLD }}"
+  kubeletExtraArgs:
+    node-ip: "{{ IP }}"
+  ignorePreflightErrors:
+    - FileAvailable--etc-kubernetes-kubelet.conf
 ---
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration

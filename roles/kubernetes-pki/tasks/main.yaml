@@ -152,6 +152,8 @@
     template:
       src: "{{ item }}"
       dest: "/tmp/{{ item }}"
+      owner: "{{ nonrootuser }}"
+      group: "{{ nonrootuser }}"
     loop:
       - kubeadm-init.yaml
       - kubeadm-join.yaml
