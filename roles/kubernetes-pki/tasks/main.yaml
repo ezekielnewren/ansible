@@ -1,0 +1,97 @@
+- block:
+  - name: lookup root ca
+    uri:
+      url: "{{ lookup('env', 'VAULT_ADDR') }}/v1/authority/pki_root/ca/pem"
+      method: GET
+      return_content: yes
+    register: t
+
+  - name: set root ca
+    set_fact:
+      ROOT_CA: "{{ t['content'] }}"
+      ROOT_CA_B64: "{{ t['content'] | b64encode }}"
+
+  - name: get ip address
+    set_fact:
+      IP: "{{ lookup('dig', inventory_hostname) }}"
+
+  - name: extract SLD
+    set_fact:
+      SLD: "{{ ((lookup('env', 'VAULT_ADDR') | urlsplit).hostname | regex_search('^.*?([A-Za-z0-9-]+\\.[A-Za-z0-9-]+)$', '\\1'))[0] }}"
+
+  - name: required variables
+    debug:
+      msg:
+        - "ansible_distribution_release: {{ ansible_distribution_release }}"
+        - "ROOT_CA: {{ ROOT_CA }}"
+        - "ROOT_CA_B64: {{ ROOT_CA_B64 }}"
+        - "inventory_hostname: {{ inventory_hostname }}"
+        - "SLD: {{ SLD }}"
+        - "IP: {{ IP }}"
+        
+
+  - name: mkdir /etc/kubernetes
+    file:
+      path: /etc/kubernetes/pki/etcd
+      state: directory
+      owner: "{{ nonrootuser }}"
+      group: "{{ nonrootuser }}"
+      mode: "0755"
+
+  - name: lookup secrets directly
+    set_fact:
+      K8S_SECRET: "{{ lookup('hashivault', 'kubernetes', mount_point='/kv/generic', version=2) }}"
+  
+  - name: copy root ca
+    copy:
+      content: "{{ ROOT_CA }}"
+      dest: /etc/kubernetes/pki/ca.crt
+      owner: "{{ nonrootuser }}"
+      group: "{{ nonrootuser }}"
+      mode: "0644"
+  
+  - name: etcd/ca.cert -> ../ca.crt
+    file:
+      src: ../ca.crt
+      dest: /etc/kubernetes/pki/etcd/ca.crt
+      state: link
+
+  - name: front-proxy-ca.crt -> ca.crt
+    file:
+      src: ca.crt
+      dest: /etc/kubernetes/pki/front-proxy-ca.crt
+      state: link
+  
+  - name: copy common certs
+    copy:
+      content: "{{ '\n'.join(K8S_SECRET['pki']['control-plane']['common'][item]['chain'])+'\n' }}"
+      dest: /etc/kubernetes/pki/{{ item }}.crt
+      owner: "{{ nonrootuser }}"
+      group: "{{ nonrootuser }}"
+      mode: "0644"
+    loop:
+      - apiserver
+      - apiserver-etcd-client
+      - apiserver-kubelet-client
+      - etcd/healthcheck-client
+      - front-proxy-client
+
+  - name: copy common keys
+    copy:
+      content: "{{ K8S_SECRET['pki']['control-plane']['common'][item]['private_key'] }}"
+      dest: /etc/kubernetes/pki/{{ item }}.key
+      owner: "root"
+      group: "root"
+      mode: "0600"
+    loop:
+      - apiserver
+      - apiserver-etcd-client
+      - apiserver-kubelet-client
+      - etcd/healthcheck-client
+      - front-proxy-client
+
+  become: yes
+  become_user: root
+  tags:
+    - kubernetes-pki
+
