@@ -90,6 +90,17 @@
       - etcd/healthcheck-client
       - front-proxy-client
 
+  - name: copy sa keypair
+    copy:
+      content: "{{ K8S_SECRET['pki']['control-plane']['keypair']['sa'][item[1]] }}"
+      dest: "/etc/kubernetes/pki/sa.{{ item[0] }}"
+      owner: "root"
+      group: "root"
+      mode: "0600"
+    loop:
+      - ["pub", "public_key"]
+      - ["key", "private_key"]
+
   - name: copy node cert
     copy:
       content: "{{ '\n'.join(K8S_SECRET['pki']['control-plane']['node'][inventory_hostname]['etcd/peer']['chain'])+'\n' }}"
