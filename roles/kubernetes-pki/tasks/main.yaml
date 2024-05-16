@@ -45,22 +45,14 @@
   - name: copy root ca
     copy:
       content: "{{ ROOT_CA }}"
-      dest: /etc/kubernetes/pki/ca.crt
+      dest: /etc/kubernetes/pki/{{ item }}
       owner: "{{ nonrootuser }}"
       group: "{{ nonrootuser }}"
       mode: "0644"
-  
-  - name: etcd/ca.cert -> ../ca.crt
-    file:
-      src: ../ca.crt
-      dest: /etc/kubernetes/pki/etcd/ca.crt
-      state: link
-
-  - name: front-proxy-ca.crt -> ca.crt
-    file:
-      src: ca.crt
-      dest: /etc/kubernetes/pki/front-proxy-ca.crt
-      state: link
+    loop:
+      - ca.crt
+      - etcd/ca.crt
+      - front-proxy-ca.crt
   
   - name: copy common certs
     copy:
