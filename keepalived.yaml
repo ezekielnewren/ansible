@@ -33,6 +33,12 @@
         name: keepalived
         state: reloaded
     
+    - debug:
+        msg:
+          - pssh -p 1 -i -H 'pm1 pm2 pm3' -l metal ip -brief a s dev br-mgmt
+      run_once: true
+      delegate_to: localhost
+
   become: yes
   become_user: root
 
