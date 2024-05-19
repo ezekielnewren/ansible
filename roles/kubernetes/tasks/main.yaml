@@ -16,6 +16,12 @@
   - name: disable selinux right now
     shell: setenforce 0
 
+  - name: disable firewalld right now
+    systemd:
+      name: firewalld
+      enabled: false
+      state: stopped
+
   - name: copy network manager file
     copy:
       src: calico.conf
