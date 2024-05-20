@@ -25,9 +25,13 @@
       name: "ubuntu"
       state: absent
 
-  - name: install sudo
+  - name: install mandatory packages
     package:
-      name: sudo
+      name:
+        - sudo
+        - epel-release
+        - python3-pip
+        - tpm2-tools
       state: present
 
   - name: create nonrootuser
@@ -38,13 +42,11 @@
       groups: wheel
       append: yes
 
-
   - name: allow the use of sudo without a password
     replace:
       path: "/etc/sudoers"
       regexp: "^(# *)?%wheel.*$"
       replace: "%wheel   ALL=(ALL:ALL) NOPASSWD: ALL"
-
 
   - name: hush login
     file:
@@ -92,11 +94,19 @@
       - pki
       - ssh
       - sshd
-      # - netplan
     loop_control:
       loop_var: role_other
+
+  - name: install nice to have packages
+    package:
+      name:
+        - nano
+        - tmux
+        - htop
+      state: present
 
   become: yes
   become_user: root
   tags:
     - baremetal
+
