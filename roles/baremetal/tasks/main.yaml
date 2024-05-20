@@ -1,4 +1,17 @@
 - block:
+  - name: lookup secrets directly
+    set_fact:
+      MACHINE_SECRET: "{{ lookup('hashivault', '{{ inventory_hostname }}', mount_point='/kv/machine', version=2) }}"
+
+  - name:
+    set_fact:
+      ROOT_PASSWORD_HASH: "{{ MACHINE_SECRET['fde']['boot']['password'] | password_hash('sha512', 65534 | random(seed=inventory_hostname) | string) }}"
+
+  - name: set root password
+    user:
+      name: root
+      password: "{{ ROOT_PASSWORD_HASH }}"
+
   - name: set hostname
     copy:
       dest: "/etc/hostname"
