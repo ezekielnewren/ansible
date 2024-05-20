@@ -79,9 +79,6 @@
       group: "{{ nonrootuser }}"
       mode: "0644"
 
-  #- set_fact:
-  #    sshuser: "{{ nonrootuser }}"
-
   - name: enabled crb repo
     shell: dnf config-manager --set-enabled crb
     when:
