@@ -17,6 +17,12 @@
           - "ansible_distribution_major_version: {{ ansible_distribution_major_version }}"
   
   tasks:
+    - name: install keepalived
+      package:
+        name:
+          - keepalived
+          - nmap
+    
     - name: generate random password for keepalived
       set_fact:
         KEEPALIVED_PASSWORD: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_lowercase', 'ascii_uppercase', 'ascii_digits'], length=22) }}"
