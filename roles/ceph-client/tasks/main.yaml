@@ -1,0 +1,90 @@
+- block:
+  - name: "Get pod name for deploy/rook-ceph-tools"
+    set_fact:
+      pod_name: "{{ lookup('kubernetes.core.k8s', api_version='v1', kind='Pod', label_selector='app=rook-ceph-tools', namespace='rook-ceph').metadata.name }}"
+
+  - name: query ceph version
+    kubernetes.core.k8s_exec:
+      kubeconfig: "~/.kube/config"
+      namespace: "rook-ceph"
+      pod: "{{ pod_name }}"
+      command: "ceph --version"
+    register: ceph_version_content
+    failed_when: "ceph_version_content.rc != 0"
+
+  - name: set CEPH_VERSION
+    set_fact:
+      CEPH_VERSION: "{{ ceph_version_content.stdout.split()[2] }}"
+
+  - name: ensure CEPH_VERSION is valid
+    assert:
+      that:
+        - "CEPH_VERSION is regex('^[0-9]+\\.[0-9]+\\.[0-9]+$')"
+      fail_msg: "Invalid ceph version value '{{ CEPH_VERSION }}'"
+      success_msg: "{{ CEPH_VERSION }}"
+
+  - name: query /etc/ceph/ceph.conf
+    kubernetes.core.k8s_exec:
+      kubeconfig: "~/.kube/config"
+      namespace: "rook-ceph"
+      pod: "{{ pod_name }}"
+      command: "cat /etc/ceph/ceph.conf"
+    register: ceph_conf_content
+    failed_when: "ceph_conf_content.rc != 0"
+    
+  - name: query /etc/ceph/keyring
+    kubernetes.core.k8s_exec:
+      kubeconfig: "~/.kube/config"
+      namespace: "rook-ceph"
+      pod: "{{ pod_name }}"
+      command: "cat /etc/ceph/keyring"
+    register: ceph_keyring_content
+    failed_when: "ceph_keyring_content.rc != 0"
+
+  - name: extract ceph.conf and keyring
+    set_fact:
+      CEPH_CONF: "{{ ceph_conf_content.stdout }}"
+      CEPH_KEYRING: "{{ ceph_keyring_content.stdout }}"
+
+  delegate_to: localhost
+  run_once: true
+  become: yes
+  become_user: root
+  tags:
+    - ceph-client
+
+- block:
+  - name: copy ceph repo file
+    template:
+      src: "ceph.repo"
+      dest: /etc/yum.repos.d/ceph.repo
+      owner: "root"
+      group: "root"
+      mode: "0644"
+
+  - name: install ceph and rbd commands
+    package:
+      name:
+        - ceph-common
+
+  - name: copy ceph.conf
+    copy:
+      content: "{{ CEPH_CONF }}"
+      dest: /etc/ceph/ceph.conf
+      owner: root
+      group: root
+      mode: "0644"
+  
+  - name: copy keyring
+    copy:
+      content: "{{ CEPH_KEYRING }}"
+      dest: /etc/ceph/keyring
+      owner: root
+      group: root
+      mode: "0600"
+
+  become: yes
+  become_user: root
+  tags:
+    - ceph-client
+
