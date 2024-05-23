@@ -11,6 +11,7 @@
       name:
         - ansible-modules-hashivault
         - dnspython
+        - kubernetes
       
 
   become: yes
