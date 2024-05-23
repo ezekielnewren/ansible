@@ -47,6 +47,7 @@
         - libvirt-client
         - libvirt-daemon
         - libvirt-devel
+        - libvirt-daemon-driver-storage-rbd
         - libxml2-devel
         - libxslt-devel
         - qemu-img
