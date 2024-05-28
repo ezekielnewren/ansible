@@ -101,6 +101,9 @@
         - tmux
         - htop
         - rsync
+        - iftop
+        - bind-utils
+        - net-tools
       state: present
 
   become: yes
