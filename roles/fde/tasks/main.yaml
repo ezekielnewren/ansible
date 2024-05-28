@@ -22,6 +22,11 @@
 - set_fact:
     DRIVE: "{{ new_DRIVE }}"
 
+- name: delete /etc/lvm/devices/system.devices
+  file:
+    path: /etc/lvm/devices/system.devices
+    state: absent
+
 #- debug:
 #    msg:
 #      - "{{ DRIVE }}"
