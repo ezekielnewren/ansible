@@ -51,6 +51,7 @@
         - libxml2-devel
         - libxslt-devel
         - qemu-img
+        - nbd
         - qemu-kvm
         - ruby-devel
         - swtpm
