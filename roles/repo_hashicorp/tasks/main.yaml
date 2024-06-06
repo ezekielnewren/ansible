@@ -1,23 +1,26 @@
 - block:
   - name: add hashicorp key
     shell: curl https://apt.releases.hashicorp.com/gpg | gpg2 --dearmor -o- > /etc/apt/trusted.gpg.d/hashicorp.gpg
+    when: ansible_facts['os_family'] == "Debian"
 
   - name: get sha256sum of hashicorp.gpg
     stat:
       path: /etc/apt/trusted.gpg.d/hashicorp.gpg
       checksum_algorithm: sha256
     register: hashicorp_stat
+    when: ansible_facts['os_family'] == "Debian"
 
   - name: verify hashicorp.gpg
     fail:
       msg: "hashicorp.gpg hash mismatch"
-    when: hashicorp_stat.stat.checksum != "4796e0478ddd795abb92066ec22a8d84a56360d75f325ccadb7646b224ee70be"
+    when: ansible_facts['os_family'] == "Debian" and hashicorp_stat.stat.checksum != "4796e0478ddd795abb92066ec22a8d84a56360d75f325ccadb7646b224ee70be"
 
   - name: add hashicorp repo
     apt_repository:
       repo: "deb [arch=amd64 signed-by=E8A032E094D8EB4EA189D270DA418C88A3219F7B] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
       update_cache: yes
       state: present
+    when: ansible_facts['os_family'] == "Debian"
 
   become: yes
   become_user: root
