@@ -120,6 +120,31 @@
     when: result.rc != 0
 
 
+  - name: copy fast-bridge.xml
+    copy:
+      src: "fast-bridge.xml"
+      dest: "/var/lib/libvirt/network/"
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: is fast-bridge defined
+    shell: virsh net-list | grep -q fast-bridge
+    failed_when: false
+    register: result
+
+  - name: create fast-bridge if not defined
+    shell: "{{ item }}"
+    args:
+      executable: /bin/bash
+    with_items:
+      - virsh net-define /var/lib/libvirt/network/fast-bridge.xml || true
+      - virsh net-start fast-bridge
+      - virsh net-autostart fast-bridge
+      - virsh net-list | grep -q fast-bridge
+    when: result.rc != 0
+
+
   become: yes
   become_user: root
   tags:
