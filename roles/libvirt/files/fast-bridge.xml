@@ -1,0 +1,6 @@
+<network>
+    <name>fast-bridge</name>
+    <forward mode="bridge"/>
+    <bridge name="br-fast"/>
+</network>
+
