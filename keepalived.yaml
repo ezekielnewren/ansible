@@ -25,7 +25,7 @@
     
     - name: lookup secrets directly
       set_fact:
-        FAST_IP: "{{ lookup('hashivault', inventory_hostname, mount_point='/kv/machine', version=2)['network']['br-fast']['ipv4'] }}"
+        FAST_IP: "{{ lookup('hashivault', inventory_hostname, mount_point='/kv/machine', version=2)['network']['br-fast']['ipv4'] | ipaddr('address') }}"
     
     - name: generate random password for keepalived
       set_fact:
