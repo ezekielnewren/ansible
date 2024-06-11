@@ -65,7 +65,8 @@
     
     - debug:
         msg:
-          - pssh -p 1 -i -H 'pm1 pm2 pm3' -l metal ip -brief a s dev br-mgmt
+          - pssh -p 1 -i -H 'pm1 pm2 pm3' -l metal 'ip -brief a s dev br-mgmt; ip -brief a s dev br-fast'
+          - pssh -p 1 -i -H 'pm1 pm2 pm3' -l metal ip r show table fast
       run_once: true
       delegate_to: localhost
 
