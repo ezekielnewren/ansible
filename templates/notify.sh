@@ -1,17 +1,10 @@
 #!/bin/bash
 
-TYPE=$1
-NAME=$2
-STATE=$3
-
-case $STATE in
-  "MASTER")
+if ip -brief a s dev br-fast | grep -q 192.168.17.1; then
     ip route del default table fast
     ip route add default via 192.168.16.1 dev br-mgmt table fast
-    ;;
-  "BACKUP" | "FAULT")
+else
     ip route del default table fast
     ip route add default via 192.168.17.1 dev br-fast table fast
-    ;;
-esac
+fi
 
