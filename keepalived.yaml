@@ -1,6 +1,6 @@
 ---
 - name: run roles
-  hosts: k8s_control_plane
+  hosts: keepalived
   pre_tasks:
     - name: minimum ansible version
       vars:
@@ -23,6 +23,10 @@
           - keepalived
           - nmap
     
+    - name: lookup secrets directly
+      set_fact:
+        FAST_IP: "{{ lookup('hashivault', inventory_hostname, mount_point='/kv/machine', version=2)['network']['br-fast']['ipv4'] }}"
+    
     - name: generate random password for keepalived
       set_fact:
         KEEPALIVED_PASSWORD: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_lowercase', 'ascii_uppercase', 'ascii_digits'], length=22) }}"
@@ -33,6 +37,18 @@
       template:
         src: keepalived.conf
         dest: /etc/keepalived/keepalived.conf
+    
+    - name: copy 17-add-routes.sh
+      template:
+        src: 17-add-routes.sh
+        dest: /etc/NetworkManager/dispatcher.d/17-add-routes.sh
+        mode: '0744'
+
+    - name: copy notify.sh
+      template:
+        src: notify.sh
+        dest: /etc/keepalived/notify.sh
+        mode: '0744'
 
     - name: restart keepalived
       systemd:
