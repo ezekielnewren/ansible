@@ -12,6 +12,7 @@
         - ansible-modules-hashivault
         - dnspython
         - kubernetes
+        - netaddr
       
 
   become: yes
