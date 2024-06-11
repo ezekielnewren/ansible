@@ -38,6 +38,14 @@
         src: keepalived.conf
         dest: /etc/keepalived/keepalived.conf
     
+    - name: add routing table 'fast'
+      lineinfile:
+        path: /etc/iproute2/rt_tables
+        line: '200 fast'
+        create: yes
+        state: present
+        insertafter: EOF
+
     - name: copy 17-add-routes.sh
       template:
         src: 17-add-routes.sh
