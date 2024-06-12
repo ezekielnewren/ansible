@@ -52,10 +52,10 @@
         dest: /etc/NetworkManager/dispatcher.d/17-add-routes.sh
         mode: '0744'
 
-    - name: copy notify.sh
+    - name: copy keepalived_notify.sh
       template:
-        src: notify.sh
-        dest: /etc/keepalived/notify.sh
+        src: keepalived_notify.sh
+        dest: /etc/keepalived/keepalived_notify.sh
         mode: '0744'
 
     - name: restart keepalived
