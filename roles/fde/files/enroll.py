@@ -4,7 +4,7 @@
 # sudo dnf install -y tpm2-tools python3-pip
 # sudo pip install pexpect
 # sudo cat secret.json | ./enroll.py
-## replace dicard with tpm2-device=auto,discard in /etc/crypttab
+## replace discard with tpm2-device=auto,discard in /etc/crypttab
 # sudo dracut -f
 # sudo grub2-mkconfig -o /boot/efi/EFI/rocky/grub.cfg
 # sudo systemctl daemon-reload
