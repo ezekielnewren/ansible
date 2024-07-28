@@ -1,0 +1,12 @@
+[Unit]
+Description=Clean temporary files on shutdown
+DefaultDependencies=no
+After=final.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/clean_tmp.sh
+
+[Install]
+WantedBy=final.target
+

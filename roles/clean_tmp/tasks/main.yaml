@@ -1,0 +1,29 @@
+- block:
+  - name: copy service file
+    copy:
+      src: clean_tmp.service
+      dest: "/etc/systemd/system/clean_tmp.service"
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: copy script file
+    copy:
+      src: clean_tmp.sh
+      dest: "/usr/local/sbin/clean_tmp.sh"
+      owner: root
+      group: root
+      mode: '0744'
+
+  - name: enable service
+    systemd:
+      name: "clean_tmp"
+      enabled: true
+      daemon_reload: true
+      state: stopped
+
+  become: yes
+  become_user: root
+  tags:
+    - clean_tmp
+
