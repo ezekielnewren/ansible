@@ -22,6 +22,14 @@
       state: present
     when: ansible_facts['os_family'] == "Debian"
 
+  - name: Download the HashiCorp repository file
+    get_url:
+      url: https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+      dest: /etc/yum.repos.d/hashicorp.repo
+      mode: '0644'
+    when: ansible_facts['os_family'] == "RedHat"
+
+
   become: yes
   become_user: root
   tags:
