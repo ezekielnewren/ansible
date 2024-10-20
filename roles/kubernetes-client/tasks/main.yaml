@@ -1,0 +1,39 @@
+- block:
+  - name: copy kubernetes.repo
+    copy:
+      src: "kubernetes.repo"
+      dest: "/etc/yum.repos.d/"
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: install container runtime
+    package:
+      name:
+        - docker
+
+  - name: find container image alias files
+    find:
+      paths: /etc/containers/registries.conf.d
+      patterns: "[0-9]{3}-.*$"
+      use_regex: yes
+    register: file_match
+
+  - name: remove container image aliases
+    file:
+      path: "{{ item.path }}"
+      state: absent
+    loop: "{{ file_match.files }}"
+    when: file_match.matched > 0
+
+  - name: install kubernetes
+    package:
+      name:
+        - kubectl
+      state: present
+
+  become: yes
+  become_user: root
+  tags:
+    - kubernetes-client
+

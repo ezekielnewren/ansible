@@ -30,42 +30,26 @@
       group: root
       mode: '0644'
 
-  - name: copy kubernetes.repo, crio.repo
+  - name: copy crio.repo
     copy:
-      src: "{{ item }}"
+      src: "crio.repo"
       dest: "/etc/yum.repos.d/"
       owner: root
       group: root
       mode: '0644'
-    loop:
-      - kubernetes.repo
-      - crio.repo
 
-  - name: install container runtime
+  - name: install cri-o
     package:
       name:
         - cri-o
-        - docker
 
-  - name: find container image alias files
-    find:
-      paths: /etc/containers/registries.conf.d
-      patterns: "[0-9]{3}-.*$"
-      use_regex: yes
-    register: file_match
-
-  - name: remove container image aliases
-    file:
-      path: "{{ item.path }}"
-      state: absent
-    loop: "{{ file_match.files }}"
-    when: file_match.matched > 0
+  - include_role:
+      name: kubernetes-client
 
   - name: install kubernetes
     package:
       name:
         - kubeadm
-        - kubectl
         - kubelet
       state: present
 
