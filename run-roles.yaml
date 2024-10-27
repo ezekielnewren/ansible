@@ -17,6 +17,7 @@
           - "ansible_facts['os_family']: {{ ansible_facts['os_family'] }}"
           - "ansible_distribution_release: {{ ansible_distribution_release }}"
           - "ansible_distribution_major_version: {{ ansible_distribution_major_version }}"
+          - "inventory_hostname: {{ inventory_hostname }}"
 
   tasks:
     - name: include roles
