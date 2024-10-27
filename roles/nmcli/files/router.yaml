@@ -1,5 +1,6 @@
 network:
   - name: br-lan
+    type: bridge
     ipv4: 192.168.16.1/24
     mtu: 1500
     ether:
@@ -11,6 +12,7 @@ network:
     wlan:
       - e0:ca:94:7c:e5:91
   - name: br-wan
+    type: bridge
     ipv4: auto
     mtu: 1500
     ether:

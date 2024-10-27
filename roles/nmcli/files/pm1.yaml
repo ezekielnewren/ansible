@@ -1,0 +1,13 @@
+network:
+  - name: br-fast
+    type: bridge
+    ipv4: 192.168.17.21/24
+    mtu: 9080
+    ether:
+      - 98:b7:85:1e:c9:8c
+      - 98:b7:85:1e:c9:8d
+  - name: br-mgmt
+    ipv4: auto
+    ether:
+      - d8:5e:d3:85:d9:ca
+
