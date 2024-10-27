@@ -1,75 +1,23 @@
-- block:
-  - name: lookup secrets directly
-    set_fact:
-      MACHINE_SECRET: "{{ lookup('hashivault', '{{ inventory_hostname }}', mount_point='/kv/machine', version=2) }}"
-  
-  - set_fact:
-      NETWORK: "{{ MACHINE_SECRET['network'] }}"
+- set_fact:
+    NETWORK: "{{ lookup('file', 'roles/nmcli/files/{{ inventory_hostname }}.yaml') | from_yaml }}"
 
-  - set_fact:
-      mac_addresses: "{{ mac_addresses | default([]) + item.macaddress }}"
-    loop: "{{ NETWORK.values() | list }}"
-    when: item.macaddress is defined
+- set_fact:
+    ether_mac: "{{ NETWORK['network'] | map(attribute='ether') | flatten }}"
+    wlan_mac: "{{ NETWORK['network'] | map(attribute='wlan') | select('defined') | flatten }}"
 
-  - name: setup udev rules to make interface names based on mac addresses
-    template:
-      src: 10-eth-mac.rules
-      dest: /etc/udev/rules.d/10-eth-mac.rules
-      owner: root
-      group: root
-      mode: '0644'
-
-  - name: create bridge br-fast
-    nmcli:
-      type: bridge
-      conn_name: br-fast
-      ifname: br-fast
-      mtu: 9080
-      stp: true
-      ip4: "{{ NETWORK['br-fast']['ipv4'] }}"
-      state: present
-
-  - name: add interfaces to br-fast
-    nmcli:
-      type: ethernet
-      conn_name: "br-fast-{{ item | replace(':', '') }}"
-      ifname: "e{{ item | replace(':', '')}}"
-      mtu: 9080
-      master: "br-fast"
-      slave_type: bridge
-      state: present
-    loop: "{{ NETWORK['br-fast']['macaddress'] }}"
-
-  - name: create bridge br-mgmt
-    nmcli:
-      type: bridge
-      conn_name: br-mgmt
-      ifname: br-mgmt
-      mtu: 1500
-      stp: true
-      # ip4: "{{ NETWORK['br-mgmt']['ipv4'] }}"
-      method4: auto
-      state: present
-
-  - name: add interfaces to br-mgmt
-    nmcli:
-      type: ethernet
-      conn_name: "br-mgmt-{{ item | replace(':', '') }}"
-      ifname: "e{{ item | replace(':', '')}}"
-      mtu: 1500
-      master: "br-mgmt"
-      slave_type: bridge
-      state: present
-    loop: "{{ NETWORK['br-mgmt']['macaddress'] }}"
-
+- name: setup udev rules to make interface names based on mac addresses
+  template:
+    src: 10-eth-mac.rules
+    dest: /etc/udev/rules.d/10-eth-mac.rules
+    owner: root
+    group: root
+    mode: '0644'
   become: yes
   become_user: root
 
-
-
-
-
-
-
+- include_tasks: add_bridge.yaml
+  loop: "{{ NETWORK['network'] }}"
+  loop_control:
+    loop_var: bridge
 
 

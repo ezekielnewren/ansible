@@ -1,14 +1,18 @@
 network:
-  br-lan:
+  - name: br-lan
     ipv4: 192.168.16.1/24
-    macaddress:
+    mtu: 1500
+    ether:
       - 00:10:a7:e0:05:36
       - 00:10:a7:e0:05:37
       - 00:10:a7:e0:05:38
       - 00:10:a7:e0:05:39
       - 00:10:a7:e0:05:3a
-  br-wan:
+    wlan:
+      - e0:ca:94:7c:e5:91
+  - name: br-wan
     ipv4: auto
-    macaddress:
+    mtu: 1500
+    ether:
       - 00:10:a7:e0:05:3b
 

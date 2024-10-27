@@ -1,0 +1,39 @@
+- name: create bridge with auto
+  nmcli:
+    type: bridge
+    conn_name: "{{ bridge.name }}"
+    ifname: "{{ bridge.name }}"
+    mtu: "{{ bridge.mtu | default(1500) }}"
+    stp: true
+    method4: auto
+    state: present
+  when: "bridge.ipv4 == 'auto'"
+  become: yes
+  become_user: root
+
+- name: create bridge with ip
+  nmcli:
+    type: bridge
+    conn_name: "{{ bridge.name }}"
+    ifname: "{{ bridge.name }}"
+    mtu: "{{ bridge.mtu | default(1500) }}"
+    stp: true
+    ip4: "{{ bridge.ipv4 }}"
+    state: present
+  when: "bridge.ipv4 != 'auto'"
+  become: yes
+  become_user: root
+
+- name: add interfaces to bridge
+  nmcli:
+    type: ethernet
+    conn_name: "{{ bridge.name }}-{{ item | replace(':', '') }}"
+    ifname: "e_{{ item | replace(':', '')}}"
+    mtu: "{{ bridge.mtu }}"
+    master: "{{ bridge.name }}"
+    slave_type: bridge
+    state: present
+  loop: "{{ bridge.ether }}"
+  become: yes
+  become_user: root
+
