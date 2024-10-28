@@ -2,12 +2,14 @@ network:
   - name: br-fast
     type: bridge
     ipv4: 192.168.17.23/24
+    zone: internal
     mtu: 9080
     ether:
       - 98:b7:85:1e:c9:bc
       - 98:b7:85:1e:c9:bd
   - name: br-mgmt
     ipv4: auto
+    zone: internal
     ether:
       - 74:56:3c:36:3b:6d
 
