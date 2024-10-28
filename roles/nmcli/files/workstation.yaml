@@ -1,0 +1,6 @@
+network:
+  - name: br-mgmt
+    ipv4: auto
+    ether:
+      - 52:54:00:04:ef:fe
+
