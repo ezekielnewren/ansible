@@ -1,9 +1,0 @@
-# udev_rules.j2
-# interface names are limited to a maximum of 15 characters
-SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="00:10:a7:e0:05:36", NAME="e0010a7e00536"
-SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="00:10:a7:e0:05:37", NAME="e0010a7e00537"
-SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="00:10:a7:e0:05:38", NAME="e0010a7e00538"
-SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="00:10:a7:e0:05:39", NAME="e0010a7e00539"
-SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="00:10:a7:e0:05:3a", NAME="e0010a7e0053a"
-SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="00:10:a7:e0:05:3b", NAME="e0010a7e0053b"
-SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="e0:ca:94:7c:e5:91", NAME="we0ca947ce591"
