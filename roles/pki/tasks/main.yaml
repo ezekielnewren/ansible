@@ -6,9 +6,24 @@
       owner: root
       group: root
       mode: '0444'
-  
+    when: ansible_distribution != "Archlinux"
+
   - name: update-ca-trust
     shell: "update-ca-trust"
+    when: ansible_distribution != "Archlinux"
+
+  - name: copy EzekielNewrenRoot.pem
+    copy:
+      src: "EzekielNewrenRoot.pem"
+      dest: "/etc/ca-certificates/trust-source/anchors/"
+      owner: root
+      group: root
+      mode: '0444'
+    when: ansible_distribution == "Archlinux"
+
+  - name: trust extract-compat
+    shell: "trust extract-compat"
+    when: ansible_distribution != "Archlinux"
     
   become: yes
   become_user: root
