@@ -24,13 +24,21 @@
     - sshd
 
 - block:
-  - name: install sshd
+  - name: install sshd arch
+    package:
+      name:
+        - openssh
+      state: present
+    when: ansible_distribution == "Archlinux"
+
+  - name: install sshd other
     package:
       name:
         - openssh-server
         # - openssh-sftp-server
         # - openssh-server-pam
       state: present
+    when: ansible_distribution != "Archlinux"
 
   - name: delete existing keys
     shell: "rm /etc/ssh/ssh_host_*"
