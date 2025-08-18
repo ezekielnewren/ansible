@@ -5,7 +5,7 @@
 
   - name:
     set_fact:
-      ROOT_PASSWORD_HASH: "{{ MACHINE_SECRET['fde']['boot']['password'] | password_hash('sha512', 65534 | random(seed=inventory_hostname) | string) }}"
+      ROOT_PASSWORD_HASH: "{{ MACHINE_SECRET['password'] | password_hash('sha512', 65534 | random(seed=inventory_hostname) | string) }}"
 
   - name: set root password
     user:
@@ -25,13 +25,18 @@
       name: "ubuntu"
       state: absent
 
+  - name: install epel-release
+    package:
+      name:
+        - epel-release
+
   - name: install mandatory packages
     package:
       name:
         - sudo
-        - epel-release
         - python3-pip
         - tpm2-tools
+        - bridge-utils
       state: present
 
   - name: create nonrootuser
